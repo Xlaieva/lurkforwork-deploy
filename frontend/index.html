@@ -5,24 +5,90 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>LurkForWork</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- You can add your styles and scripts here -->
     <link rel="stylesheet" type="text/css" media="screen" href="styles/global.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 </head>
 <body>
-    <!-- This is an example app structure, you can modify this as much as you choose --> 
-    <header>
-        <h1>lurkforwork.com</h1>
-        <nav>
-            <li class="nav-item">Item</li>
-            <li class="nav-item">Item</li>
-        </nav>
-    </header>
     <main role="main">
-        <!-- app goes here --> 
+        <div id="errorPopup" class="hide modal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Error Message</h5>
+                    <button type="button" id="closePopup" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body" id="errorMessage">
+                  </div>
+                </div>
+            </div>
+        </div>
+        <div id="page-login" class="page hide"> 
+            <h1>
+                Login
+            </h1>
+            <div class="input-group mb-3">
+                <span class="input-group-text">Email</span>
+                <input type="text" class="form-control" placeholder="Email" aria-label="Email" aria-describedby="basic-addon1" id="l-email">
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">Password</span>
+                <input type="password" class="form-control" aria-label="Password" aria-describedby="basic-addon1" id="l-password">
+            </div>
+            <button id="btn-lsubmit" type="button" class="btn btn-primary">Login</button>
+            <button id="btn-toRegister" type="button" class="btn btn-secondary toPage">register</button>
+        </div>
+        <div id="page-register" class="page hide"> 
+            <h1>
+                Register
+            </h1>
+            <div class="input-group mb-3">
+                <span class="input-group-text">Email</span>
+                <input type="text" class="form-control" placeholder="Email" aria-label="Email" aria-describedby="basic-addon1" id="r-email">
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">Name</span>
+                <input type="text" class="form-control" placeholder="Name" aria-label="Name" aria-describedby="basic-addon1" id="r-name">
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">Password</span>
+                <input type="password" class="form-control" aria-label="Password" aria-describedby="basic-addon1"  id="r-password">
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">Comfirm Password</span>
+                <input type="password" class="form-control" aria-label="Comfirm Password" aria-describedby="basic-addon1" id="r-cpassword">
+             </div>
+            <button id="btn-rsubmit" type="button" class="btn btn-primary">Register</button>
+            <button id="btn-toLogin" type="button" class="btn btn-secondary toPage">login</button>
+        </div>
+        <div id="page-home" class="page hide">
+            <h1> LurkForWork </h1>
+            <button id="btn-logout" type="button" class="btn btn-primary">logout</button>
+            <div id="feed-content" class="row row-cols-1 row-cols-md-3 g-4" > 
+                <div class="col">
+                    <div id="feed-card">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal hide" tabindex="-1" id="likeinside">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">People who liked this job</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closelikePeople"></button>
+                </div>
+                <div class="modal-body" id="likepeople">
+                  
+                </div>
+              </div>
+            </div>
+        </div>
     </main>
     <footer>
         <p>&copy; lurkforwork.com</p>
     </footer>
     <script type="module" src="src/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
 </body>
 </html>
