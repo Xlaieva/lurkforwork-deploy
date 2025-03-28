@@ -78,6 +78,25 @@
             </div>
             <p class="text-center py-4 hide" id="nomoreJobs">No jobs to display. Follow more people to see their posts.</p>
         </div>
+        <!--profile-->
+        <div id="page-profile" class="page hide">
+            <h1>User Profile</h1>
+            <button class="btn btn-secondary toPage" data-page="home">home</button>
+            <div class="card my-3" id="profile-card">
+                <img id="profile-image" class="card-img-top" alt="Profile image">
+                <div class="card-body">
+                    <h2 id="profile-name"></h2>
+                    <p>Email: <span id="profile-email"></span></p>
+                    <p>Followers: <span id="profile-followers-count"></span></p>
+                    <h3>Followers List</h3>
+                    <ul class="list-group" id="profile-followers-list"></ul>
+                </div>
+            </div>
+            <h2>Jobs Posted</h2>
+            <div id="profile-jobs" class="row row-cols-1 row-cols-md-2 g-4"></div>
+        </div>
+
+
         <!--like popup-->
         <div class="modal hide" tabindex="-1" id="likeinside">
             <div class="modal-dialog">
