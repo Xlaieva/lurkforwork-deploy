@@ -96,7 +96,41 @@
             </div>
             <h2>Jobs Posted</h2>
             <div id="profile-jobs" class="row row-cols-1 row-cols-md-2 g-4"></div>
+            
         </div>
+
+
+        <!--updateProfile Popup-->
+        <div id="update-profile" class="modal hide" tabindex="-1">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update your profile here:</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closeupdateProfile"></button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="input-group mb-3 card-body">
+                        <span class="input-group-text">Email</span>
+                        <input type="text" class="form-control" id="updateProfile-email" placeholder="Email" aria-label="Email" aria-describedby="basic-addon1">
+                    </div>
+                    <div class="input-group mb-3 card-body">
+                        <span class="input-group-text" >Password</span>
+                        <input type="text" class="form-control" id="updateProfile-password" placeholder="Password" aria-label="Password" aria-describedby="basic-addon1">
+                    </div>
+                    <div class="input-group mb-3 card-body">
+                        <span class="input-group-text" >Name</span>
+                        <input type="text" class="form-control" id="updateProfile-name" placeholder="Name" aria-label="Name" aria-describedby="basic-addon1">
+                    </div>
+                    <div class="input-group mb-3 card-body">
+                        <input type="file" class="form-control" accept="image/*" id="updateProfile-image">
+                    </div> 
+                    <div class="mb-3 card-body"></div>
+                    <button class="btn" id="btn-upload">Upload</button>  
+                    </div> 
+                </div>
+            </div>
+        </div>
+        </div>    
 
 
         <!--like popup-->
@@ -107,8 +141,7 @@
                   <h5 class="modal-title">People who liked this job</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closelikePeople"></button>
                 </div>
-                <div class="modal-body" id="likepeople">
-                  
+                <div class="modal-body" id="likepeople">  
                 </div>
               </div>
             </div>
@@ -122,8 +155,7 @@
                   <h5 class="modal-title">COMMENT</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closeComment"></button>
                 </div>
-                <div class="modal-body" id="commentcontent">
-                  
+                <div class="modal-body" id="commentcontent">      
                 </div>
               </div>
             </div>
