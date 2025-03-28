@@ -150,6 +150,103 @@ function createJobCard(job){
         return jobCard;
 }
 
+function viewLiker(jobCard,job){
+    jobCard.querySelector('.view-likers').addEventListener('click', () => {
+        const likeinside = document.getElementById('likeinside');
+        const likepeople = document.getElementById('likepeople');
+        likepeople.innerHTML='';
+        likeinside.style.display = 'flex';
+        document.getElementById('closelikePeople').addEventListener('click',() => {
+            likeinside.style.display = 'none';
+        }
+        );
+        if(job.likes.length===0){
+            likepeople.innerHTML = `<p class="text-center my-3">No likes yet</p>`;
+            return;
+        }
+        const listlikePeople = document.createElement('div');
+        listlikePeople.className = 'list-group list-group-flush';
+        job.likes.forEach(user => {
+            const userNameElement = document.createElement('a');
+            userNameElement.href='#';
+            userNameElement.className= 'list-group-item list-group-item-action';
+            userNameElement.innerHTML=
+            `<div class="d-flex justify-content-between align-items-center">
+            <span>${user.userName || `User ${user.userId}`}</span>
+            <small class="text-muted">ID: ${user.userId}</small>
+            </div>`;
+            userNameElement.addEventListener('click', ()=>{
+                likeinside.style.display = 'none';
+                 //showProfile(userid);
+            });
+        listlikePeople.appendChild(userNameElement);
+        });
+        likepeople.appendChild(listlikePeople);
+    });
+}
+
+function viewComment(jobCard,job){
+    jobCard.querySelector('.view-comments').addEventListener('click', () => {
+        const commentinside = document.getElementById('commentinside');
+        const commentcontent = document.getElementById('commentcontent');
+        commentcontent.innerHTML='';
+        commentinside.style.display = 'flex';
+        document.getElementById('closeComment').addEventListener('click',() => {
+            commentinside.style.display = 'none';
+        }
+        );
+        if(job.comments.length===0){
+            commentcontent.innerHTML = `<p class="text-center my-3">No comments yet</p>`;
+            return;
+        }
+        const listComments = document.createElement('div');
+        listComments.className = 'list-group list-group-flush';
+        job.comments.forEach(user => {
+            const commentElement = document.createElement('div');
+            commentElement.className= 'list-group-item list-group-item-action';
+            commentElement.innerHTML=
+            `<div class="d-flex justify-content-between align-items-center">
+            <a href="#" class="userNameElement active">${user.userName || `User ${user.userId}`}</a>
+            <p class="mb-1">${user.comment}</p>
+            </div>`;
+            commentElement.querySelector('.userNameElement').addEventListener('click', ()=>{
+                commentinside.style.display = 'none';
+                 //showProfile(userid);
+            });
+        listComments.appendChild(commentElement);
+        });
+        commentcontent.appendChild(listComments);
+    });
+}
+
+
+function setupLikeButton(job, jobCard) {
+    const currentUserId = localStorage.getItem('lurkforwork_userID');
+    const likeButton = jobCard.querySelector('#like');
+    const likeCountElement = jobCard.querySelector('.likelength');
+    const viewLikersButton = jobCard.querySelector('.view-likers');
+    
+    likeButton.addEventListener('click', () => {
+        const isLiked = job.likes[currentUserId];
+        apiCall('job/like', 'PUT', JSON.stringify({
+            id: job.id,
+            turnon: !isLiked
+        }), {
+            'Content-type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
+        }, function(data) {
+            if (!isLiked) {
+                job.likes[currentUserId]=true;
+            } else {
+                delete job.likes[currentUserId];
+            }
+            //updateLikeButtonState(job, currentUserId, likeButton);
+            const newLikeCount = job.likes.length;
+            likeCountElement.textContent = newLikeCount;
+            viewLikersButton.textContent = `View ${newLikeCount} ${newLikeCount === 1 ? 'like' : 'likes'}`;
+        });
+    });
+}
 
 /*function updateLikeButtonState(job,currentUserId,likeButton) {
     const isLiked = job.likes[currentUserId];
