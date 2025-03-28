@@ -58,7 +58,7 @@ document.getElementById('btn-lsubmit').addEventListener('click',() => {
     }),{
         'Content-type': 'application/json',
     },function(data){
-        console.log(data.userId);
+        //console.log(data.userId);
         localStorage.setItem('lurkforwork_token',data.token);
         localStorage.setItem('lurkforwork_userID',data.userId);
         showPage('home');
@@ -72,9 +72,12 @@ document.getElementById('btn-logout').addEventListener('click',() => {
 });
 
 document.getElementById('btn-myprofile').addEventListener('click',() => {
-    //console.log(localStorage.getItem('lurkforwork_userID'));
     showProfile(localStorage.getItem('lurkforwork_userID'));
+    //console.log(localStorage.getItem('lurkforwork_userID'));
+    updateProfile();
 });
+
+
 
 const showPage = (pageName) => {
     const pages = document.querySelectorAll('.page');
@@ -97,9 +100,9 @@ const loadFeed = (reset = false) => {
     },function(data){
         isLoading = false;
         document.getElementById('loading').style.display = 'none';
-        console.log(data);
+        //console.log(data);
         const feedContainer = document.getElementById('feed-content');
-        console.log(feedContainer.children.length);
+        //console.log(feedContainer.children.length);
         if (reset) {
             feedContainer.innerHTML = '';
         }
@@ -132,16 +135,22 @@ function createJobCard(job){
         'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
     }, function(userData) {
         userName=userData.name;
-        //console.log(userName);
+        //console.log(job.likes[0].userId);
+        const likerIDs = job.likes.map(like => String(like.userId));
+        const isLiked = likerIDs.includes(localStorage.getItem('lurkforwork_userID'));
+        console.log(likerIDs);
+        console.log(currentUserId);
+        console.log(isLiked);
         jobCard.innerHTML = `
             ${job.image ? `<img src="${job.image}" class="card-img-top" alt="Job image">` : ''}
             <div class="card-body ">
                 <h5 class="card-title">${job.title}</h5>
                 <p class="card-text"><strong>Starting Date:</strong> ${formatStartDate(job.start)}</p>
                     <div class="like me-2">
-                        <button id="like" class="btn btn-sm btn-outline-primary">
-                        Like
-                        </button>
+                        <button id="like" class="btn btn-sm ${isLiked ? 'btn-primary' : 'btn-outline-primary'}" 
+                        ${isLiked ? 'disabled' : ''}>
+                        ${isLiked ? 'Liked' : 'Like'}
+                    </button>
                         <span class="ms-1 likelength">${job.likes.length}</span>
                     </div>
                     <button class="btn btn-link btn-sm view-likers" data-job-id="${job.id}">
@@ -178,7 +187,7 @@ function showProfile(userId) {
         'Content-type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
     }, function(userData) {
-        console.log(userData.usersWhoWatchMeUserIds);
+        //console.log(userData.usersWhoWatchMeUserIds);
         //console.log(userData.image);
         if(userData.image){
             const profileImage = document.getElementById('profile-image');
@@ -189,13 +198,6 @@ function showProfile(userId) {
         document.getElementById('profile-name').textContent = userData.name;
         document.getElementById('profile-email').textContent = userData.email;
         document.getElementById('profile-followers-count').textContent = userData.usersWhoWatchMeUserIds.length;
-        const backButton = document.getElementById('btn-tomyprofile');
-        /*if (userId !== currentUserId) {
-            backButton.style.display = 'block';
-            backButton.onclick = () => showProfile(currentUserId);
-        } else {
-            backButton.style.display = 'none';
-        }*/
         const followersList = document.getElementById('profile-followers-list');
         followersList.innerHTML = '';
         userData.usersWhoWatchMeUserIds.forEach(follower => {
@@ -214,13 +216,18 @@ function showProfile(userId) {
         });  
         const profileJobsContainer = document.getElementById('profile-jobs');
         profileJobsContainer.innerHTML = '';
+        if(userData.jobs.length===0){
+            const nomoreJobs = document.createElement('p');
+            nomoreJobs.innerText="It seems no jobs here."
+            profileJobsContainer.appendChild(nomoreJobs);
+        }
         userData.jobs.forEach(job => {
             const jobCard = createJobCard(job);
             profileJobsContainer.appendChild(jobCard);
         });
-        console.log('showP');
+        //console.log('showP');
         showPage('profile');
-        console.log('showPl');
+        //console.log('showPl');
         document.getElementById('btn-tomyprofile').addEventListener('click',() => {
             console.log(localStorage.getItem('lurkforwork_userID'));
             showProfile(localStorage.getItem('lurkforwork_userID'));
@@ -303,35 +310,50 @@ function setupLikeButton(job, jobCard) {
     const likeButton = jobCard.querySelector('#like');
     const likeCountElement = jobCard.querySelector('.likelength');
     const viewLikersButton = jobCard.querySelector('.view-likers');
-    
+    const likerIDs = job.likes.map(like => String(like.userId));
+    const isLiked = likerIDs.includes(currentUserId);
+    if (isLiked) {
+        likeButton.disabled = true;
+        likeButton.textContent = 'Liked';
+        likeButton.classList.remove('btn-outline-primary');
+        likeButton.classList.add('btn-primary');
+    } else {
+        likeButton.disabled = false;
+        likeButton.textContent = 'Like';
+        likeButton.classList.add('btn-outline-primary');
+        likeButton.classList.remove('btn-primary');
+    }
     likeButton.addEventListener('click', () => {
-        const isLiked = job.likes[currentUserId];
+        if (job.likes[currentUserId]) {
+            return;
+        }
         apiCall('job/like', 'PUT', JSON.stringify({
             id: job.id,
-            turnon: !isLiked
+            turnon: true
         }), {
             'Content-type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
         }, function(data) {
-            if (!isLiked) {
-                job.likes[currentUserId]=true;
-            } else {
-                delete job.likes[currentUserId];
-            }
-            //updateLikeButtonState(job, currentUserId, likeButton);
+            console.log(data);
+            //job.likes[currentUserId]=true;
+            const cleanedLikes = data.likes.filter(like => 
+                like && typeof like === 'object' && like.userId
+            );
+            job.likes = cleanedLikes;
             const newLikeCount = job.likes.length;
+            console.log(job.likes);
             likeCountElement.textContent = newLikeCount;
             viewLikersButton.textContent = `View ${newLikeCount} ${newLikeCount === 1 ? 'like' : 'likes'}`;
+            likeButton.disabled = true;
+            likeButton.textContent = 'Liked';
+            likeButton.classList.remove('btn-outline-primary');
+            likeButton.classList.add('btn-primary');
+            
         });
     });
 }
 
-/*function updateLikeButtonState(job,currentUserId,likeButton) {
-    const isLiked = job.likes[currentUserId];
-    likeButton.className = 'btn btn-sm';
-    likeButton.textContent = isLiked ? 'Unlike' : 'Like';
-    likeButton.classList.add(isLiked ? 'btn-primary' : 'btn-outline-primary');
-}*/
+
 
 
 
@@ -377,12 +399,11 @@ window.addEventListener('scroll', () => {
 });
 
 
-/*let token = localStorage.getItem('lurkforwork_token');
+let token = localStorage.getItem('lurkforwork_token');
 if(token){
     showPage('home');
     loadFeed();
 }else{
     showPage('login');
 }
-*/
-showPage('login');
+
