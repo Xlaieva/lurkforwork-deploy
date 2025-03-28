@@ -43,7 +43,7 @@ document.getElementById('btn-rsubmit').addEventListener('click',() => {
         'Content-type': 'application/json'
     }, function(data){
             localStorage.setItem('lurkforwork_token',data.token);
-            localStorage.setItem('lurkforwork_userID',data.userID);
+            localStorage.setItem('lurkforwork_userID',data.userId);
             showPage('home');
             loadFeed();
 
@@ -58,8 +58,9 @@ document.getElementById('btn-lsubmit').addEventListener('click',() => {
     }),{
         'Content-type': 'application/json',
     },function(data){
+        console.log(data.userId);
         localStorage.setItem('lurkforwork_token',data.token);
-        localStorage.setItem('lurkforwork_userID',data.userID);
+        localStorage.setItem('lurkforwork_userID',data.userId);
         showPage('home');
         loadFeed();
 });
@@ -68,6 +69,11 @@ document.getElementById('btn-logout').addEventListener('click',() => {
         localStorage.removeItem('lurkforwork_token');
         localStorage.removeItem('lurkforwork_userID');
         showPage('login');
+});
+
+document.getElementById('btn-myprofile').addEventListener('click',() => {
+    //console.log(localStorage.getItem('lurkforwork_userID'));
+    showProfile(localStorage.getItem('lurkforwork_userID'));
 });
 
 const showPage = (pageName) => {
@@ -177,9 +183,19 @@ function showProfile(userId) {
         if(userData.image){
             const profileImage = document.getElementById('profile-image');
             profileImage.src=userData.image;}
+        else {
+                document.getElementById('profile-image').style.display = 'none';
+            }
         document.getElementById('profile-name').textContent = userData.name;
         document.getElementById('profile-email').textContent = userData.email;
         document.getElementById('profile-followers-count').textContent = userData.usersWhoWatchMeUserIds.length;
+        const backButton = document.getElementById('btn-tomyprofile');
+        /*if (userId !== currentUserId) {
+            backButton.style.display = 'block';
+            backButton.onclick = () => showProfile(currentUserId);
+        } else {
+            backButton.style.display = 'none';
+        }*/
         const followersList = document.getElementById('profile-followers-list');
         followersList.innerHTML = '';
         userData.usersWhoWatchMeUserIds.forEach(follower => {
@@ -205,6 +221,10 @@ function showProfile(userId) {
         console.log('showP');
         showPage('profile');
         console.log('showPl');
+        document.getElementById('btn-tomyprofile').addEventListener('click',() => {
+            console.log(localStorage.getItem('lurkforwork_userID'));
+            showProfile(localStorage.getItem('lurkforwork_userID'));
+        });
     });
 }
 
@@ -357,10 +377,12 @@ window.addEventListener('scroll', () => {
 });
 
 
-let token = localStorage.getItem('lurkforwork_token');
+/*let token = localStorage.getItem('lurkforwork_token');
 if(token){
     showPage('home');
     loadFeed();
 }else{
     showPage('login');
 }
+*/
+showPage('login');
