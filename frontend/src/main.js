@@ -43,9 +43,10 @@ document.getElementById('btn-rsubmit').addEventListener('click',() => {
         'Content-type': 'application/json'
     }, function(data){
             localStorage.setItem('lurkforwork_token',data.token);
+            localStorage.setItem('lurkforwork_userID',data.userID);
             showPage('home');
-            console.log(token);
             loadFeed();
+
     });
 });
 document.getElementById('btn-lsubmit').addEventListener('click',() => {
@@ -58,14 +59,15 @@ document.getElementById('btn-lsubmit').addEventListener('click',() => {
         'Content-type': 'application/json',
     },function(data){
         localStorage.setItem('lurkforwork_token',data.token);
+        localStorage.setItem('lurkforwork_userID',data.userID);
         showPage('home');
         loadFeed();
 });
 });
 document.getElementById('btn-logout').addEventListener('click',() => {
         localStorage.removeItem('lurkforwork_token');
+        localStorage.removeItem('lurkforwork_userID');
         showPage('login');
-        localStorage.setItem(null);
 });
 const showPage = (pageName) => {
     const pages = document.querySelectorAll('.page');
@@ -75,83 +77,89 @@ const showPage = (pageName) => {
         document.getElementById(`page-${pageName}`).classList.remove('hide');
 }
 
-const loadFeed = () => {
-    apiCall('job/feed?start=0','GET', null,{
+let isLoading = false;
+let currentStart = 0;
+const loadFeed = (reset = false) => {
+    if (isLoading) return;
+    isLoading = true;
+    document.getElementById('loading').textContent = 'Loading more jobs...';
+    document.getElementById('loading').style.display = 'block';
+    apiCall(`job/feed?start=${currentStart}`,'GET', null,{
         'Content-type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}` ,
+        'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
     },function(data){
-        //feedcard(2.2)
+        isLoading = false;
+        document.getElementById('loading').style.display = 'none';
         console.log(data);
         const feedContainer = document.getElementById('feed-content');
-        const templateCard = document.getElementById('feed-card');
-        if (data.length === 0) {
-            feedContainer.innerHTML = '<p> No jobs to display. Follow more people to see their posts. </p>';
+        console.log(feedContainer.children.length);
+        if (reset) {
+            feedContainer.innerHTML = '';
+        }
+        if (!data || data.length === 0) {
+            document.getElementById('nomoreJobs').style.display = 'block';
             return;
+        }else{
+            document.getElementById('nomoreJobs').style.display = 'none';
         }
         data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         data.forEach(job => {
-            const jobCard = document.createElement('div');
-            jobCard.className = 'card h-100';
-            jobCard.innerHTML = `
-                ${job.image ? `<img src="${job.image}" class="card-img-top" alt="Job image">` : ''}
-                <div class="card-body">
-                    <h5 class="card-title">${job.title}</h5>
-                    <p class="card-text"><strong>Starting Date:</strong> ${formatStartDate(job.start)}</p>
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="like me-2">
-                            <button id="like" class="btn btn-sm btn-outline-primary">Like</button>
-                            <span class="ms-1">${job.likes.length}</span>
-                        </div>
-                        <button class="btn btn-link btn-sm view-likers" data-job-id="${job.id}">
-                            View ${job.likes.length} ${job.likes.length === 1 ? 'like' : 'likes'}
-                        </button>
-                    </div>
-                    <p class="card-text job-description">${job.description}</p>
-                    <div class="text-muted">
-                        ${job.comments.length} ${job.comments.length === 1 ? 'comment' : 'comments'}
-                    </div>
-                </div>
-                <div class="card-footer">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="fw-bold">Posted by: User ${job.userId}</span>
-                        <span class="text-muted">${formatTimestamp(job.createdAt)}</span>
-                    </div>
-                </div>`;
+            const jobCard = createJobCard(job);
             feedContainer.appendChild(jobCard);
-            //view like（2.3.1）
-            jobCard.querySelector('.view-likers').addEventListener('click', () => {
-                const likeinside = document.getElementById('likeinside');
-                const likepeople = document.getElementById('likepeople');
-                likeinside.style.display = 'flex';
-                document.getElementById('closelikePeople').addEventListener('click',() => {
-                    likeinside.style.display = 'none';
-                }
-                );
-                if(job.likes.length===0){
-                    likepeople.innerHTML = `<p class="text-center my-3">No likes yet</p>`;
-                    return;
-                }
-                const listlikePeople = document.createElement('div');
-                listlikePeople.className = 'list-group list-group-flush';
-                job.likes.forEach(user => {
-                    const userNameElement = document.createElement('a');
-                    userNameElement.href='#';
-                    userNameElement.className= 'list-group-item list-group-item-action';
-                    userNameElement.innerHTML=
-                    `<div class="d-flex justify-content-between align-items-center">
-                    <span>${user.userName || `User ${user.userId}`}</span>
-                    <small class="text-muted">ID: ${user.userId}</small>
-                    </div>`;
-                    userNameElement.addEventListener('click', ()=>{
-                        likeinside.style.display = 'none';
-                    });
-                listlikePeople.appendChild(userNameElement);
-                });
-                likepeople.appendChild(listlikePeople);
-            });
+            viewLiker(jobCard,job);
+            viewComment(jobCard,job);
+            setupLikeButton(job, jobCard);
         });
+        currentStart += data.length;
     }); 
 };
+
+function createJobCard(job){
+    const currentUserId = localStorage.getItem('lurkforwork_userID');
+    const jobCard = document.createElement('div');
+    const isLiked = job.likes[currentUserId];
+    console.log(isLiked);
+    jobCard.className = 'card';
+    jobCard.innerHTML = `
+        ${job.image ? `<img src="${job.image}" class="card-img-top" alt="Job image">` : ''}
+        <div class="card-body ">
+            <h5 class="card-title">${job.title}</h5>
+            <p class="card-text"><strong>Starting Date:</strong> ${formatStartDate(job.start)}</p>
+                <div class="like me-2">
+                    <button id="like" class="btn btn-sm btn-outline-primary">
+                    Like
+                    </button>
+                    <span class="ms-1 likelength">${job.likes.length}</span>
+                </div>
+                <button class="btn btn-link btn-sm view-likers" data-job-id="${job.id}">
+                    View ${job.likes.length} ${job.likes.length === 1 ? 'like' : 'likes'}
+                </button>
+            <p class="card-text job-description">${job.description}</p>
+            <div class="d-flex justify-content-between align-items-center">
+                <button class="btn btn-sm btn-outline-secondary view-comments">
+                    View ${job.comments.length} ${job.comments.length === 1 ? 'comment' : 'comments'}
+                </button>
+            </div>
+        </div>
+        <div class="card-footer">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Posted by: User ${job.userId}</span>
+                <span class="text-muted">${formatTimestamp(job.createdAt)}</span>
+            </div>
+        </div>`;
+        return jobCard;
+}
+
+
+/*function updateLikeButtonState(job,currentUserId,likeButton) {
+    const isLiked = job.likes[currentUserId];
+    likeButton.className = 'btn btn-sm';
+    likeButton.textContent = isLiked ? 'Unlike' : 'Like';
+    likeButton.classList.add(isLiked ? 'btn-primary' : 'btn-outline-primary');
+}*/
+
+
+
 function formatTimestamp(timestamp) {
     const now = new Date();
     const postDate = new Date(timestamp);
@@ -185,9 +193,19 @@ buttons.forEach(button => {
   })
 });
 
+
+window.addEventListener('scroll', () => {
+    if (isLoading || document.getElementById('loading').style.display === 'flex') return;
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
+        loadFeed();
+    }
+});
+
+
 let token = localStorage.getItem('lurkforwork_token');
 if(token){
     showPage('home');
+    loadFeed();
 }else{
     showPage('login');
 }
