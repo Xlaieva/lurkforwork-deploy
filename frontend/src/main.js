@@ -69,6 +69,7 @@ document.getElementById('btn-logout').addEventListener('click',() => {
         localStorage.removeItem('lurkforwork_userID');
         showPage('login');
 });
+
 const showPage = (pageName) => {
     const pages = document.querySelectorAll('.page');
         for(const page of pages) {
@@ -106,48 +107,105 @@ const loadFeed = (reset = false) => {
         data.forEach(job => {
             const jobCard = createJobCard(job);
             feedContainer.appendChild(jobCard);
-            viewLiker(jobCard,job);
-            viewComment(jobCard,job);
-            setupLikeButton(job, jobCard);
         });
         currentStart += data.length;
     }); 
 };
 
+
+
 function createJobCard(job){
     const currentUserId = localStorage.getItem('lurkforwork_userID');
     const jobCard = document.createElement('div');
-    const isLiked = job.likes[currentUserId];
-    console.log(isLiked);
     jobCard.className = 'card';
-    jobCard.innerHTML = `
-        ${job.image ? `<img src="${job.image}" class="card-img-top" alt="Job image">` : ''}
-        <div class="card-body ">
-            <h5 class="card-title">${job.title}</h5>
-            <p class="card-text"><strong>Starting Date:</strong> ${formatStartDate(job.start)}</p>
-                <div class="like me-2">
-                    <button id="like" class="btn btn-sm btn-outline-primary">
-                    Like
+    const isLiked = job.likes[currentUserId];
+    let userName = '';
+
+    apiCall(`user/?userId=${job.creatorId}`, 'GET', null, {
+       'Content-type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
+    }, function(userData) {
+        userName=userData.name;
+        //console.log(userName);
+        jobCard.innerHTML = `
+            ${job.image ? `<img src="${job.image}" class="card-img-top" alt="Job image">` : ''}
+            <div class="card-body ">
+                <h5 class="card-title">${job.title}</h5>
+                <p class="card-text"><strong>Starting Date:</strong> ${formatStartDate(job.start)}</p>
+                    <div class="like me-2">
+                        <button id="like" class="btn btn-sm btn-outline-primary">
+                        Like
+                        </button>
+                        <span class="ms-1 likelength">${job.likes.length}</span>
+                    </div>
+                    <button class="btn btn-link btn-sm view-likers" data-job-id="${job.id}">
+                        View ${job.likes.length} ${job.likes.length === 1 ? 'like' : 'likes'}
                     </button>
-                    <span class="ms-1 likelength">${job.likes.length}</span>
+                <p class="card-text job-description">${job.description}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <button class="btn btn-sm btn-outline-secondary view-comments">
+                        View ${job.comments.length} ${job.comments.length === 1 ? 'comment' : 'comments'}
+                    </button>
                 </div>
-                <button class="btn btn-link btn-sm view-likers" data-job-id="${job.id}">
-                    View ${job.likes.length} ${job.likes.length === 1 ? 'like' : 'likes'}
-                </button>
-            <p class="card-text job-description">${job.description}</p>
-            <div class="d-flex justify-content-between align-items-center">
-                <button class="btn btn-sm btn-outline-secondary view-comments">
-                    View ${job.comments.length} ${job.comments.length === 1 ? 'comment' : 'comments'}
-                </button>
             </div>
-        </div>
-        <div class="card-footer">
-            <div class="d-flex justify-content-between align-items-center">
-                <span class="fw-bold">Posted by: User ${job.userId}</span>
-                <span class="text-muted">${formatTimestamp(job.createdAt)}</span>
-            </div>
-        </div>`;
-        return jobCard;
+            <div class="card-footer">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="fw-bold">Posted by: <a id="userNamefromJob">${userName}</a> </span>
+                    <span class="text-muted">${formatTimestamp(job.createdAt)}</span>
+                </div>
+            </div>`;
+        viewLiker(jobCard,job);
+        viewComment(jobCard,job);
+        setupLikeButton(job, jobCard);
+        jobCard.querySelector('#userNamefromJob').addEventListener('click', ()=>{
+            //console.log(userName);
+            //console.log(userId);
+        showProfile(job.creatorId);
+        });
+    //console.log(job.creatorId);
+    });
+    return jobCard;
+}
+
+function showProfile(userId) {
+    apiCall(`user/?userId=${userId}`, 'GET', null, {
+        'Content-type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
+    }, function(userData) {
+        console.log(userData.usersWhoWatchMeUserIds);
+        //console.log(userData.image);
+        if(userData.image){
+            const profileImage = document.getElementById('profile-image');
+            profileImage.src=userData.image;}
+        document.getElementById('profile-name').textContent = userData.name;
+        document.getElementById('profile-email').textContent = userData.email;
+        document.getElementById('profile-followers-count').textContent = userData.usersWhoWatchMeUserIds.length;
+        const followersList = document.getElementById('profile-followers-list');
+        followersList.innerHTML = '';
+        userData.usersWhoWatchMeUserIds.forEach(follower => {
+            apiCall(`user/?userId=${follower}`, 'GET', null, {
+            'Content-type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
+            }, function(userData) {
+                const followerItem = document.createElement('li');
+                followerItem.className = 'list-group-item';
+                followerItem.innerHTML = `<a href="#" class="follower-link" data-user-id="${follower}">${userData.name}</a>`;
+                followerItem.querySelector('.follower-link').addEventListener('click', () => {
+                    showProfile(follower);
+                    });
+                followersList.appendChild(followerItem);
+            });
+        });  
+        const profileJobsContainer = document.getElementById('profile-jobs');
+        profileJobsContainer.innerHTML = '';
+        userData.jobs.forEach(job => {
+            const jobCard = createJobCard(job);
+            profileJobsContainer.appendChild(jobCard);
+        });
+        console.log('showP');
+        showPage('profile');
+        console.log('showPl');
+    });
 }
 
 function viewLiker(jobCard,job){
@@ -177,7 +235,7 @@ function viewLiker(jobCard,job){
             </div>`;
             userNameElement.addEventListener('click', ()=>{
                 likeinside.style.display = 'none';
-                 //showProfile(userid);
+                 showProfile(user.userId);
             });
         listlikePeople.appendChild(userNameElement);
         });
@@ -211,7 +269,7 @@ function viewComment(jobCard,job){
             </div>`;
             commentElement.querySelector('.userNameElement').addEventListener('click', ()=>{
                 commentinside.style.display = 'none';
-                 //showProfile(userid);
+                 showProfile(user.userId);
             });
         listComments.appendChild(commentElement);
         });
@@ -286,7 +344,7 @@ const buttons = document.querySelectorAll('.toPage');
 buttons.forEach(button => {
   button.addEventListener('click', () => {
     const pageName = button.innerText;
-    showPage(pageName)
+    showPage(pageName);
   })
 });
 
