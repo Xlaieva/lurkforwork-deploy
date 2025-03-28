@@ -78,6 +78,58 @@ document.getElementById('btn-myprofile').addEventListener('click',() => {
 });
 
 
+function updateProfile(){
+    const updateprofile=document.getElementById('update-profile');
+    const updateProfileButton = document.createElement('button');
+    updateProfileButton.className ="button btn-primary";
+    updateProfileButton.innerText="Update Profile";
+    document.getElementById('page-profile').appendChild(updateProfileButton);
+    updateProfileButton.addEventListener('click',() => {
+        //console.log(localStorage.getItem('lurkforwork_userID'));
+        updateprofile.style.display='flex';
+    });
+    document.getElementById('closeupdateProfile').addEventListener('click',() => {
+        updateprofile.style.display = 'none';
+    });
+    document.getElementById('btn-upload').addEventListener('click',() => {
+        const email = document.getElementById('updateProfile-email').value;
+        const name = document.getElementById('updateProfile-name').value;
+        const password = document.getElementById('updateProfile-password').value;
+        const image = document.getElementById('updateProfile-image');
+        const updateData = {};
+        updateData.id=localStorage.getItem('lurkforwork_userID');
+        if (email && email.trim() !== '') updateData.email = email;
+        if (name && name.trim() !== '') updateData.name = name;
+        if (password && password.trim() !== '') updateData.password = password;
+        if (image.files && image.files.length > 0) {
+            fileToDataUrl(image.files[0]).then(imageData => {
+                if (imageData.startsWith('data:')) {
+                    updateData.image = imageData;
+                } else {
+                    updateData.image = `data:${image.files[0].type};base64,${imageData}`;
+                }
+                console.log(updateData);
+                sendUpdateRequest(updateData);
+            });
+        } else {
+            sendUpdateRequest(updateData);
+            console.log(updateData);
+            updateprofile.style.display = 'none';
+        }
+    });
+}
+function sendUpdateRequest(data) {
+    if (Object.keys(data).length === 0) {
+        console.log('44');
+        showError('No changes to update');
+        return;
+    }
+    apiCall('user', 'PUT', JSON.stringify(data), {
+        'Content-type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
+        }, function(response) {      
+    }); 
+}
 
 const showPage = (pageName) => {
     const pages = document.querySelectorAll('.page');
