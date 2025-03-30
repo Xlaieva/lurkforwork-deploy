@@ -68,6 +68,8 @@
             <h1> LurkForWork </h1>
             <button id="btn-logout" type="button" class="btn btn-primary">logout</button>
             <button id="btn-myprofile" type="button" class="btn btn-primary">My Profile</button>
+            <button id="btn-addJob" type="button" class="btn btn-primary">Add Job</button>
+            <button id="btn-watchUser" type="button" class="btn btn-primary">Watch User</button>
             <div id="feed-content" class="row row-cols-1 row-cols-md-2 g-4" > 
                 <div class="col">
                     <div id="loading" class="hide">
@@ -98,8 +100,6 @@
             <div id="profile-jobs" class="row row-cols-1 row-cols-md-2 g-4"></div>
             
         </div>
-
-
         <!--updateProfile Popup-->
         <div id="update-profile" class="modal hide" tabindex="-1">
             <div class="modal-content">
@@ -131,8 +131,72 @@
             </div>
         </div>
         </div>    
-
-
+        <!--addJob Popup-->
+        <div id="add-job" class="modal hide" tabindex="-1">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add job here:</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closeAddJob"></button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="input-group mb-3 card-body">
+                        <span class="input-group-text">Title</span>
+                        <input type="text" class="form-control" id="addJob-title" placeholder="title" aria-label="Title" aria-describedby="basic-addon1">
+                    </div>
+                    <div class="input-group mb-3 card-body">
+                        <span class="input-group-text" >Date</span>
+                        <input type="date" class="form-control" id="addJob-date" placeholder="Date" aria-label="Date" aria-describedby="basic-addon1">
+                    </div>
+                    <div class="input-group mb-3 card-body">
+                        <span class="input-group-text" >Job description</span>
+                        <input type="text" class="form-control" id="addJob-description" placeholder="Description" aria-label="Description" aria-describedby="basic-addon1">
+                    </div>
+                    <div class="input-group mb-3 card-body">
+                        <input type="file" class="form-control" accept="image/*" id="addJob-image">
+                    </div> 
+                    <div class="mb-3 card-body"></div>
+                    <button class="btn" id="btn-addJob-upload">Upload</button>  
+                    </div> 
+                </div>
+            </div>
+        </div>
+        </div>    
+        <!--updateJob Popup-->
+        <div class="modal hide" tabindex="-1" id="updateJobPopup">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Update Job</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closeUpdateJob"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="card">
+                            <div class="input-group mb-3 card-body">
+                                <span class="input-group-text">Title</span>
+                                <input type="text" class="form-control" id="updateJob-title" placeholder="Title">
+                            </div>
+                            <div class="input-group mb-3 card-body">
+                                <span class="input-group-text">Date</span>
+                                <input type="date" class="form-control" id="updateJob-date" placeholder="Date">
+                            </div>
+                            <div class="input-group mb-3 card-body">
+                                <span class="input-group-text">Description</span>
+                                <input type="text" class="form-control" id="updateJob-description" placeholder="Description">
+                            </div>
+                            <div class="input-group mb-3 card-body">
+                                <input type="file" class="form-control" accept="image/*" id="updateJob-image">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="cancelUpdateJob">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="submitUpdateJob">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!--like popup-->
         <div class="modal hide" tabindex="-1" id="likeinside">
             <div class="modal-dialog">
@@ -158,6 +222,27 @@
                 <div class="modal-body" id="commentcontent">      
                 </div>
               </div>
+            </div>
+        </div>
+        <!-- watch popup -->
+        <div class="modal hide" tabindex="-1" id="watchPopup">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Watch User</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closeWatchPopup"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">Email</span>
+                            <input type="text" class="form-control" id="watch-email" placeholder="Enter user's email">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="cancelWatch">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="submitWatch">Watch</button>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
