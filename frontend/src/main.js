@@ -127,6 +127,75 @@ function addJob(){
     });
 }
 
+function UpdateJob(job) {
+    document.getElementById('updateJob-title').value = job.title;
+    document.getElementById('updateJob-date').value = job.start.split('/').reverse().join('-');
+    document.getElementById('updateJob-description').value = job.description;
+    document.getElementById('updateJobPopup').style.display = 'flex';
+    document.getElementById('updateJobPopup').style.justifyContent = 'center';
+    document.getElementById('updateJobPopup').style.alignItems = 'center';
+    document.getElementById('submitUpdateJob').onclick = function() {
+        const jobData = {
+            id: job.id,
+            title: document.getElementById('updateJob-title').value,
+            start: document.getElementById('updateJob-date').value,
+            description: document.getElementById('updateJob-description').value
+        };
+        const image = document.getElementById('updateJob-image');
+        if (image.files && image.files.length > 0) {
+            fileToDataUrl(image.files[0]).then(imageData => {
+                jobData.image = imageData.startsWith('data:') ? imageData : `data:${image.files[0].type};base64,${imageData}`;
+                updateJob(jobData);
+            });
+        } else {
+            updateJob(jobData);
+        }
+    };
+}
+
+function updateJob(jobData) {
+    apiCall('job', 'PUT', JSON.stringify(jobData), {
+        'Content-type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
+    }, function() {
+        document.getElementById('updateJobPopup').style.display = 'none';
+        loadFeed(true); 
+    });
+}
+
+function DeleteJob(jobId) {
+    document.getElementById('deleteJobPopup').style.display = 'flex';
+    document.getElementById('deleteJobPopup').style.justifyContent = 'center';
+    document.getElementById('deleteJobPopup').style.alignItems = 'center';
+    document.getElementById('confirmDeleteJob').onclick = function() {
+        apiCall('job', 'DELETE', JSON.stringify({id: jobId}), {
+            'Content-type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
+        }, function() {
+            document.getElementById('deleteJobPopup').style.display = 'none';
+            loadFeed(true); 
+        });
+    };
+}
+
+
+document.getElementById('closeUpdateJob').addEventListener('click', () => {
+    document.getElementById('updateJobPopup').style.display = 'none';
+});
+
+document.getElementById('cancelUpdateJob').addEventListener('click', () => {
+    document.getElementById('updateJobPopup').style.display = 'none';
+});
+
+document.getElementById('closeDeleteJob').addEventListener('click', () => {
+    document.getElementById('deleteJobPopup').style.display = 'none';
+});
+
+document.getElementById('cancelDeleteJob').addEventListener('click', () => {
+    document.getElementById('deleteJobPopup').style.display = 'none';
+});
+
+
 function sendJobRequest(data) {
     apiCall('job', 'POST', JSON.stringify(data), {
         'Content-type': 'application/json',
