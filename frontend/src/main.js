@@ -348,7 +348,7 @@ function watchPopup(){
 function createJobCard(job) {
     const currentUserId = localStorage.getItem('lurkforwork_userID');
     const jobCard = document.createElement('div');
-    jobCard.className = 'card h-100';
+    jobCard.className = 'card h-100 d-flex flex-column';
     const isCreator = String(job.creatorId) === String(currentUserId);
     apiCall(`user/?userId=${job.creatorId}`, 'GET', null, {
         'Content-type': 'application/json',
@@ -360,12 +360,13 @@ function createJobCard(job) {
         if (job.image) {
             const img = document.createElement('img');
             img.src = job.image;
-            img.className = 'card-img-top';
+            img.className = 'card-img-top object-fit-cover';
+            img.style.height = '200px';
             img.alt = 'Job image';
             jobCard.appendChild(img);
         }
         const cardBody = document.createElement('div');
-        cardBody.className = 'card-body';
+        cardBody.className = 'card-body d-flex flex-column';
         jobCard.appendChild(cardBody);
         const title = document.createElement('h5');
         title.className = 'card-title';
@@ -396,11 +397,11 @@ function createJobCard(job) {
         viewLikersBtn.textContent = `View ${job.likes.length} ${job.likes.length === 1 ? 'like' : 'likes'}`;
         likeContainer.appendChild(viewLikersBtn);
         const description = document.createElement('p');
-        description.className = 'card-text job-description';
+        description.className = 'card-text job-description flex-grow-1 mb-3';
         description.textContent = job.description;
         cardBody.appendChild(description);
         const commentsContainer = document.createElement('div');
-        commentsContainer.className = 'd-flex justify-content-between align-items-center';
+        commentsContainer.className = 'd-flex justify-content-between align-items-center mt-auto';
         cardBody.appendChild(commentsContainer);
         const viewCommentsBtn = document.createElement('button');
         viewCommentsBtn.className = 'btn btn-sm btn-outline-secondary view-comments';
@@ -427,7 +428,7 @@ function createJobCard(job) {
             creatorControls.appendChild(deleteBtn);
         }
         const cardFooter = document.createElement('div');
-        cardFooter.className = 'card-footer';
+        cardFooter.className = 'card-footer bg-transparent border-top-0 mt-auto';
         jobCard.appendChild(cardFooter);
         const footerContent = document.createElement('div');
         footerContent.className = 'd-flex justify-content-between align-items-center';
@@ -514,9 +515,14 @@ function showProfile(userId) {
         document.getElementById('profile-email').textContent = userData.email;
         document.getElementById('profile-followers-count').textContent = userData.usersWhoWatchMeUserIds.length;
         const followersList = document.getElementById('profile-followers-list');
-        followersList.replaceChildren();
+        while (followersList.firstChild) {
+            followersList.removeChild(followersList.firstChild);
+        }
         if (userData.usersWhoWatchMeUserIds.length === 0) {
-            followersList.innerHTML = '<li class="list-group-item">No followers yet</li>';
+            const noFollowersItem = document.createElement('li');
+            noFollowersItem.className = 'list-group-item';
+            noFollowersItem.textContent = 'No followers yet';
+            followersList.appendChild(noFollowersItem);
             return;
         }
         
@@ -531,8 +537,13 @@ function showProfile(userId) {
                 
                 const followerItem = document.createElement('li');
                 followerItem.className = 'list-group-item';
-                followerItem.innerHTML = `<a href="#" class="follower-link" data-user-id="${follower}">${userData.name}</a>`;
-                followerItem.querySelector('.follower-link').addEventListener('click', () => {
+                const followerLink = document.createElement('a');
+                followerLink.href = '#';
+                followerLink.className = 'follower-link';
+                followerLink.dataset.userId = follower;
+                followerLink.textContent = userData.name;
+                followerItem.appendChild(followerLink);
+                followerLink.addEventListener('click', () => {
                     showProfile(follower);
                     });
                 followersList.appendChild(followerItem);
@@ -540,7 +551,9 @@ function showProfile(userId) {
         }
         });  
         const profileJobsContainer = document.getElementById('profile-jobs');
-        profileJobsContainer.innerHTML = '';
+        while (profileJobsContainer.firstChild) {
+            profileJobsContainer.removeChild(profileJobsContainer.firstChild);
+        }
         if(userData.jobs.length===0){
             const nomoreJobs = document.createElement('p');
             nomoreJobs.innerText="It seems no jobs here."
