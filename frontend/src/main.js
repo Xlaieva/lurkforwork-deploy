@@ -44,9 +44,16 @@ document.getElementById('btn-rsubmit').addEventListener('click',() => {
     }, function(data){
             localStorage.setItem('lurkforwork_token',data.token);
             localStorage.setItem('lurkforwork_userID',data.userId);
-            showPage('home');
-            loadFeed();
-
+            apiCall('user/watch','PUT',JSON.stringify({
+                id: data.userId,
+                turnon: true
+            }),{
+                'Content-type': 'application/json',
+                'Authorization': `Bearer ${data.token}`
+            },function(){
+                showPage('home');
+                loadFeed();
+            });
     });
 });
 document.getElementById('btn-lsubmit').addEventListener('click',() => {
@@ -61,8 +68,16 @@ document.getElementById('btn-lsubmit').addEventListener('click',() => {
         //console.log(data.userId);
         localStorage.setItem('lurkforwork_token',data.token);
         localStorage.setItem('lurkforwork_userID',data.userId);
-        showPage('home');
-        loadFeed();
+        apiCall('user/watch','PUT',JSON.stringify({
+            id: data.userId,
+            turnon: true
+        }),{
+            'Content-type': 'application/json',
+            'Authorization': `Bearer ${data.token}`
+        },function(){
+            showPage('home');
+            loadFeed();
+        });
 });
 });
 document.getElementById('btn-logout').addEventListener('click',() => {
@@ -72,25 +87,21 @@ document.getElementById('btn-logout').addEventListener('click',() => {
 });
 
 document.getElementById('btn-myprofile').addEventListener('click',() => {
+    const existingUpdateButton = document.getElementById('updateProfileButton');
+    if (existingUpdateButton) {
+        existingUpdateButton.remove();
+    }
     showProfile(localStorage.getItem('lurkforwork_userID'));
     //console.log(localStorage.getItem('lurkforwork_userID'));
-    updateProfile();
+    //updateProfile();
 });
+
+
 
 
 function updateProfile(){
     const updateprofile=document.getElementById('update-profile');
-    const updateProfileButton = document.createElement('button');
-    updateProfileButton.className ="button btn-primary";
-    updateProfileButton.innerText="Update Profile";
-    document.getElementById('page-profile').appendChild(updateProfileButton);
-    updateProfileButton.addEventListener('click',() => {
-        //console.log(localStorage.getItem('lurkforwork_userID'));
-        updateprofile.style.display='flex';
-    });
-    document.getElementById('closeupdateProfile').addEventListener('click',() => {
-        updateprofile.style.display = 'none';
-    });
+    document.getElementById('btn-upload').onclick = null; 
     document.getElementById('btn-upload').addEventListener('click',() => {
         const email = document.getElementById('updateProfile-email').value;
         const name = document.getElementById('updateProfile-name').value;
@@ -108,19 +119,19 @@ function updateProfile(){
                 } else {
                     updateData.image = `data:${image.files[0].type};base64,${imageData}`;
                 }
-                console.log(updateData);
+                //console.log(updateData);
                 sendUpdateRequest(updateData);
             });
         } else {
             sendUpdateRequest(updateData);
-            console.log(updateData);
+            //console.log(updateData);
             updateprofile.style.display = 'none';
         }
     });
 }
 function sendUpdateRequest(data) {
     if (Object.keys(data).length === 0) {
-        console.log('44');
+        //console.log('44');
         showError('No changes to update');
         return;
     }
@@ -165,11 +176,23 @@ const loadFeed = (reset = false) => {
             document.getElementById('nomoreJobs').style.display = 'none';
         }
         data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        let row = document.createElement('div');
+        row.className = 'row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4';
+        feedContainer.appendChild(row);
         data.forEach(job => {
             const jobCard = createJobCard(job);
             feedContainer.appendChild(jobCard);
         });
         currentStart += data.length;
+        watchPopup();
+
+        const addJobBtn = document.getElementById('btn-addJob');
+        
+        addJobBtn.addEventListener('click', () => {
+            document.getElementById('add-job').style.display = 'flex';
+            document.getElementById('add-job').style.justifyContent = 'center';
+            document.getElementById('add-job').style.alignItems = 'center';
+        });
     }); 
 };
 
@@ -178,10 +201,10 @@ const loadFeed = (reset = false) => {
 function createJobCard(job){
     const currentUserId = localStorage.getItem('lurkforwork_userID');
     const jobCard = document.createElement('div');
-    jobCard.className = 'card';
+    jobCard.className = 'card h-100';
     const isLiked = job.likes[currentUserId];
     let userName = '';
-
+    const isCreator = String(job.creatorId) === String(currentUserId);
     apiCall(`user/?userId=${job.creatorId}`, 'GET', null, {
        'Content-type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
@@ -190,9 +213,11 @@ function createJobCard(job){
         //console.log(job.likes[0].userId);
         const likerIDs = job.likes.map(like => String(like.userId));
         const isLiked = likerIDs.includes(localStorage.getItem('lurkforwork_userID'));
-        console.log(likerIDs);
+        //console.log(likerIDs);
+        //console.log(currentUserId);
+        console.log(isCreator);
+        console.log(job.creatorId);
         console.log(currentUserId);
-        console.log(isLiked);
         jobCard.innerHTML = `
             ${job.image ? `<img src="${job.image}" class="card-img-top" alt="Job image">` : ''}
             <div class="card-body ">
@@ -214,6 +239,12 @@ function createJobCard(job){
                         View ${job.comments.length} ${job.comments.length === 1 ? 'comment' : 'comments'}
                     </button>
                 </div>
+                ${isCreator ? `
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-warning update-job" data-job-id="${job.id}">Update</button>
+                        <button class="btn btn-sm btn-danger delete-job" data-job-id="${job.id}">Delete</button>
+                    </div> ` 
+                : ''}
             </div>
             <div class="card-footer">
                 <div class="d-flex justify-content-between align-items-center">
@@ -230,6 +261,15 @@ function createJobCard(job){
         showProfile(job.creatorId);
         });
     //console.log(job.creatorId);
+    if (isCreator) {
+        jobCard.querySelector('.update-job').addEventListener('click', () => {
+            UpdateJob(job);
+        });
+        
+        jobCard.querySelector('.delete-job').addEventListener('click', () => {
+            DeleteJob(job.id);
+        });
+    }
     });
     return jobCard;
 }
@@ -284,6 +324,30 @@ function showProfile(userId) {
             console.log(localStorage.getItem('lurkforwork_userID'));
             showProfile(localStorage.getItem('lurkforwork_userID'));
         });
+        const existingUpdateButton = document.getElementById('updateProfileButton');
+        if (existingUpdateButton) {
+            existingUpdateButton.remove();
+        }
+        const updateProfileButton = document.createElement('button');
+        const updateprofile=document.getElementById('update-profile');
+        if (userId === localStorage.getItem('lurkforwork_userID')) {
+            updateProfileButton.id="updateProfileButton";
+            updateProfileButton.className ="button btn-primary";
+            updateProfileButton.innerText="Update Profile";
+            document.getElementById('page-profile').appendChild(updateProfileButton);
+            updateProfileButton.addEventListener('click',() => {
+                //console.log(localStorage.getItem('lurkforwork_userID'));
+                updateprofile.style.display='flex';
+            });
+            document.getElementById('closeupdateProfile').addEventListener('click',() => {
+                updateprofile.style.display = 'none';
+            });
+            updateProfile();
+        }
+        else{
+            
+        }
+
     });
 }
 
@@ -455,6 +519,7 @@ let token = localStorage.getItem('lurkforwork_token');
 if(token){
     showPage('home');
     loadFeed();
+    addJob();
 }else{
     showPage('login');
 }
