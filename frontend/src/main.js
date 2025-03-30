@@ -345,72 +345,116 @@ function watchPopup(){
 }
 
 
-function createJobCard(job){
+function createJobCard(job) {
     const currentUserId = localStorage.getItem('lurkforwork_userID');
     const jobCard = document.createElement('div');
     jobCard.className = 'card h-100';
-    //const isLiked = job.likes[currentUserId];
-    let userName = '';
     const isCreator = String(job.creatorId) === String(currentUserId);
     apiCall(`user/?userId=${job.creatorId}`, 'GET', null, {
-       'Content-type': 'application/json',
+        'Content-type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
     }, function(userData) {
-        userName=userData.name;
-        //console.log(job.likes[0].userId);
+        const userName = userData.name;
         const likerIDs = job.likes.map(like => String(like.userId));
-        const isLiked = likerIDs.includes(localStorage.getItem('lurkforwork_userID'));
-        jobCard.innerHTML = `
-            ${job.image ? `<img src="${job.image}" class="card-img-top" alt="Job image">` : ''}
-            <div class="card-body ">
-                <h5 class="card-title">${job.title}</h5>
-                <p class="card-text"><strong>Starting Date:</strong> ${formatStartDate(job.start)}</p>
-                    <div class="like me-2">
-                        <button id="like" class="btn btn-sm ${isLiked ? 'btn-primary' : 'btn-outline-primary'}" 
-                        ${isLiked ? 'disabled' : ''}>
-                        ${isLiked ? 'Liked' : 'Like'}
-                    </button>
-                        <span class="ms-1 likelength">${job.likes.length}</span>
-                    </div>
-                    <button class="btn btn-link btn-sm view-likers" data-job-id="${job.id}">
-                        View ${job.likes.length} ${job.likes.length === 1 ? 'like' : 'likes'}
-                    </button>
-                <p class="card-text job-description">${job.description}</p>
-                <div class="d-flex justify-content-between align-items-center">
-                    <button class="btn btn-sm btn-outline-secondary view-comments">
-                        View ${job.comments.length} ${job.comments.length === 1 ? 'comment' : 'comments'}
-                    </button>
-                    <button class="btn btn-sm btn-primary post-comment" data-job-id="${job.id}">
-                        Add Comment
-                    </button>
-                </div>
-                ${isCreator ? `
-                    <div class="mt-3">
-                        <button class="btn btn-sm btn-warning update-job" data-job-id="${job.id}">Update</button>
-                        <button class="btn btn-sm btn-danger delete-job" data-job-id="${job.id}">Delete</button>
-                    </div> ` 
-                : ''}
-            </div>
-            <div class="card-footer">
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="fw-bold">Posted by: <a id="userNamefromJob">${userName}</a> </span>
-                    <span class="text-muted">${formatTimestamp(job.createdAt)}</span>
-                </div>
-            </div>`;
-        viewLiker(jobCard,job);
-        viewComment(jobCard,job);
+        const isLiked = likerIDs.includes(currentUserId);
+        if (job.image) {
+            const img = document.createElement('img');
+            img.src = job.image;
+            img.className = 'card-img-top';
+            img.alt = 'Job image';
+            jobCard.appendChild(img);
+        }
+        const cardBody = document.createElement('div');
+        cardBody.className = 'card-body';
+        jobCard.appendChild(cardBody);
+        const title = document.createElement('h5');
+        title.className = 'card-title';
+        title.textContent = job.title;
+        cardBody.appendChild(title);
+        const startDate = document.createElement('p');
+        startDate.textContent = ''; 
+        const strong = document.createElement('strong');
+        strong.textContent = 'Starting Date: ';
+        startDate.append(strong, formatStartDate(job.start));
+        cardBody.appendChild(startDate);
+        const likeContainer = document.createElement('div');
+        likeContainer.className = 'd-flex align-items-center mb-2';
+        cardBody.appendChild(likeContainer);
+        const likeBtn = document.createElement('button');
+        likeBtn.id = 'like';
+        likeBtn.className = `btn btn-sm ${isLiked ? 'btn-primary' : 'btn-outline-primary'} me-2`;
+        if (isLiked) likeBtn.disabled = true;
+        likeBtn.textContent = isLiked ? 'Liked' : 'Like';
+        likeContainer.appendChild(likeBtn);
+        const likeCount = document.createElement('span');
+        likeCount.className = 'ms-1 likelength';
+        likeCount.textContent = job.likes.length;
+        likeContainer.appendChild(likeCount);
+        const viewLikersBtn = document.createElement('button');
+        viewLikersBtn.className = 'btn btn-link btn-sm view-likers';
+        viewLikersBtn.dataset.jobId = job.id;
+        viewLikersBtn.textContent = `View ${job.likes.length} ${job.likes.length === 1 ? 'like' : 'likes'}`;
+        likeContainer.appendChild(viewLikersBtn);
+        const description = document.createElement('p');
+        description.className = 'card-text job-description';
+        description.textContent = job.description;
+        cardBody.appendChild(description);
+        const commentsContainer = document.createElement('div');
+        commentsContainer.className = 'd-flex justify-content-between align-items-center';
+        cardBody.appendChild(commentsContainer);
+        const viewCommentsBtn = document.createElement('button');
+        viewCommentsBtn.className = 'btn btn-sm btn-outline-secondary view-comments';
+        viewCommentsBtn.textContent = `View ${job.comments.length} ${job.comments.length === 1 ? 'comment' : 'comments'}`;
+        commentsContainer.appendChild(viewCommentsBtn);
+        const addCommentBtn = document.createElement('button');
+        addCommentBtn.className = 'btn btn-sm btn-primary post-comment';
+        addCommentBtn.dataset.jobId = job.id;
+        addCommentBtn.textContent = 'Add Comment';
+        commentsContainer.appendChild(addCommentBtn);
+        if (isCreator) {
+            const creatorControls = document.createElement('div');
+            creatorControls.className = 'mt-3';
+            cardBody.appendChild(creatorControls);
+            const updateBtn = document.createElement('button');
+            updateBtn.className = 'btn btn-sm btn-warning update-job';
+            updateBtn.dataset.jobId = job.id;
+            updateBtn.textContent = 'Update';
+            creatorControls.appendChild(updateBtn);
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-sm btn-danger delete-job';
+            deleteBtn.dataset.jobId = job.id;
+            deleteBtn.textContent = 'Delete';
+            creatorControls.appendChild(deleteBtn);
+        }
+        const cardFooter = document.createElement('div');
+        cardFooter.className = 'card-footer';
+        jobCard.appendChild(cardFooter);
+        const footerContent = document.createElement('div');
+        footerContent.className = 'd-flex justify-content-between align-items-center';
+        cardFooter.appendChild(footerContent);
+        const postedBy = document.createElement('span');
+        postedBy.className = 'fw-bold';
+        const postedByText = document.createTextNode('Posted by: ');
+        postedBy.appendChild(postedByText);
+        const userNameLink = document.createElement('a');
+        userNameLink.id = 'userNamefromJob';
+        userNameLink.textContent = userName;
+        postedBy.appendChild(userNameLink);
+        footerContent.appendChild(postedBy);
+        const timestamp = document.createElement('span');
+        timestamp.className = 'text-muted';
+        timestamp.textContent = formatTimestamp(job.createdAt);
+        footerContent.appendChild(timestamp);
+        viewLiker(jobCard, job);
+        viewComment(jobCard, job);
         updateLikeButton(job, jobCard);
-        jobCard.querySelector('#userNamefromJob').addEventListener('click', ()=>{
-            //console.log(userName);
-            //console.log(userId);
-        showProfile(job.creatorId);
+        userNameLink.addEventListener('click', () => {
+            showProfile(job.creatorId);
         });
-    //console.log(job.creatorId);
         if (isCreator) {
             jobCard.querySelector('.update-job').addEventListener('click', () => {
                 UpdateJob(job);
             });
-            
             jobCard.querySelector('.delete-job').addEventListener('click', () => {
                 DeleteJob(job.id);
             });
