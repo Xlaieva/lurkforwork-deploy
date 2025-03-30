@@ -96,8 +96,50 @@ document.getElementById('btn-myprofile').addEventListener('click',() => {
     //updateProfile();
 });
 
+function addJob(){
+    const addJobModal = document.getElementById('add-job');
+    document.getElementById('btn-addJob-upload').onclick = null;
+    document.getElementById('btn-addJob-upload').addEventListener('click', () => {
+        const title = document.getElementById('addJob-title').value;
+        const date = document.getElementById('addJob-date').value;
+        const description = document.getElementById('addJob-description').value;
+        const image = document.getElementById('addJob-image');
+        if (!title || !date || !description) {
+            showError('Please fill in all required fields');
+            return;
+        }
+        const jobData = {
+            title: title,
+            start: date,
+            description: description
+        };
+        if (image.files && image.files.length > 0) {
+            fileToDataUrl(image.files[0]).then(imageData => {
+                jobData.image = imageData.startsWith('data:') ? imageData : `data:${image.files[0].type};base64,${imageData}`;
+                sendJobRequest(jobData);
+            });
+        } else {
+            sendJobRequest(jobData);
+        }
+    });
+    document.getElementById('closeAddJob').addEventListener('click', () => {
+        addJobModal.style.display = 'none';
+    });
+}
 
-
+function sendJobRequest(data) {
+    apiCall('job', 'POST', JSON.stringify(data), {
+        'Content-type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
+    }, function(response) {
+        document.getElementById('add-job').style.display = 'none';
+        document.getElementById('addJob-title').value = '';
+        document.getElementById('addJob-date').value = '';
+        document.getElementById('addJob-description').value = '';
+        document.getElementById('addJob-image').value = '';
+        loadFeed(true);
+    });
+}
 
 function updateProfile(){
     const updateprofile=document.getElementById('update-profile');
@@ -196,6 +238,40 @@ const loadFeed = (reset = false) => {
     }); 
 };
 
+function watchPopup(){
+    const watchUserBtn = document.getElementById('btn-watchUser');
+    watchUserBtn.addEventListener('click', () => {
+        document.getElementById('watchPopup').style.display = 'flex';
+        document.getElementById('watchPopup').style.justifyContent = 'center';
+        document.getElementById('watchPopup').style.alignItems = 'center';
+    });
+
+    document.getElementById('closeWatchPopup').addEventListener('click', () => {
+        document.getElementById('watchPopup').style.display = 'none';
+    });
+
+    document.getElementById('cancelWatch').addEventListener('click', () => {
+        document.getElementById('watchPopup').style.display = 'none';
+    });
+
+    document.getElementById('submitWatch').addEventListener('click', () => {
+        const email = document.getElementById('watch-email').value;
+        if (email) {
+            apiCall('user/watch', 'PUT', JSON.stringify({
+                email: email,
+                turnon: true
+            }), {
+                'Content-type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
+            }, function() {
+                document.getElementById('watchPopup').style.display = 'none';
+                document.getElementById('watch-email').value = '';
+                showError(`Now watching user with email: ${email}`);
+
+            });
+        }
+    });
+}
 
 
 function createJobCard(job){
@@ -274,6 +350,7 @@ function createJobCard(job){
     return jobCard;
 }
 
+
 function showProfile(userId) {
     apiCall(`user/?userId=${userId}`, 'GET', null, {
         'Content-type': 'application/json',
@@ -345,7 +422,27 @@ function showProfile(userId) {
             updateProfile();
         }
         else{
+            if(existingUpdateButton){
+                document.getElementById('page-profile').removeChild(existingUpdateButton);
+            }
+            const watchButton = document.createElement('button');
+            watchButton.id = "watchButton";
+            watchButton.className = "button btn-primary";
+            const isWatching = userData.usersWhoWatchMeUserIds.includes(localStorage.getItem('lurkforwork_userID'));
+            watchButton.innerText = isWatching ? "Unwatch" : "Watch";
             
+            watchButton.addEventListener('click', () => {
+                apiCall('user/watch', 'PUT', JSON.stringify({
+                    id: userId,
+                    turnon: !isWatching
+                }), {
+                    'Content-type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
+                }, function() {
+                    showProfile(userId);
+                });
+            });
+            document.getElementById('profile-card').appendChild(watchButton);
         }
 
     });
