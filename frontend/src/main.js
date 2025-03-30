@@ -422,6 +422,34 @@ function createJobCard(job){
     return jobCard;
 }
 
+function updateComment(jobId) {
+    document.getElementById('comment-text').value = '';
+    document.getElementById('commentPostPopup').style.display = 'flex';
+    document.getElementById('commentPostPopup').style.justifyContent = 'center';
+    document.getElementById('commentPostPopup').style.alignItems = 'center';
+    document.getElementById('closeCommentPost').addEventListener('click', () => {
+        document.getElementById('commentPostPopup').style.display = 'none';
+    });
+    document.getElementById('cancelCommentPost').addEventListener('click', () => {
+        document.getElementById('commentPostPopup').style.display = 'none';
+    });
+    document.getElementById('submitCommentPost').addEventListener('click', () => {
+        const commentText = document.getElementById('comment-text').value;
+        if (!commentText) {
+            showError('Comment cannot be empty');
+            return;
+        }
+        apiCall('job/comment', 'POST', JSON.stringify({
+            id: jobId,
+            comment: commentText
+        }), {
+            'Content-type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
+        }, function() {
+            document.getElementById('commentPostPopup').style.display = 'none';
+        });
+    });
+}
 
 function showProfile(userId) {
     const existingButtons = document.querySelectorAll('#watchButton, #updateProfileButton');
