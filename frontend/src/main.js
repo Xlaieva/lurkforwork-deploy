@@ -809,3 +809,21 @@ if(token){
     showPage('login');
 }
 
+function handleHashChange() {
+    const hash = window.location.hash.substring(1);
+    
+    if (hash === 'feed') {
+        showPage('home');
+        loadFeed(true);
+    } 
+    else if (hash === 'profile') {
+        showProfile(localStorage.getItem('lurkforwork_userID'));
+    }
+    else if (hash.startsWith('profile=')) {
+        const userId = hash.split('=')[1];
+        showProfile(userId);
+    }
+}
+
+window.addEventListener('hashchange', handleHashChange);
+window.addEventListener('load', handleHashChange);
