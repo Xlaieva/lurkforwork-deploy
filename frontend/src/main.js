@@ -278,7 +278,9 @@ const loadFeed = (reset = false) => {
         const feedContainer = document.getElementById('feed-content');
         //console.log(feedContainer.children.length);
         if (reset) {
-            feedContainer.innerHTML = '';
+            while (feedContainer.firstChild) {
+                feedContainer.removeChild(feedContainer.firstChild);
+            }
         }
         if (!data || data.length === 0) {
             document.getElementById('nomoreJobs').style.display = 'block';
@@ -347,7 +349,7 @@ function createJobCard(job){
     const currentUserId = localStorage.getItem('lurkforwork_userID');
     const jobCard = document.createElement('div');
     jobCard.className = 'card h-100';
-    const isLiked = job.likes[currentUserId];
+    //const isLiked = job.likes[currentUserId];
     let userName = '';
     const isCreator = String(job.creatorId) === String(currentUserId);
     apiCall(`user/?userId=${job.creatorId}`, 'GET', null, {
@@ -358,11 +360,6 @@ function createJobCard(job){
         //console.log(job.likes[0].userId);
         const likerIDs = job.likes.map(like => String(like.userId));
         const isLiked = likerIDs.includes(localStorage.getItem('lurkforwork_userID'));
-        //console.log(likerIDs);
-        //console.log(currentUserId);
-        console.log(isCreator);
-        console.log(job.creatorId);
-        console.log(currentUserId);
         jobCard.innerHTML = `
             ${job.image ? `<img src="${job.image}" class="card-img-top" alt="Job image">` : ''}
             <div class="card-body ">
@@ -383,6 +380,9 @@ function createJobCard(job){
                     <button class="btn btn-sm btn-outline-secondary view-comments">
                         View ${job.comments.length} ${job.comments.length === 1 ? 'comment' : 'comments'}
                     </button>
+                    <button class="btn btn-sm btn-primary post-comment" data-job-id="${job.id}">
+                        Add Comment
+                    </button>
                 </div>
                 ${isCreator ? `
                     <div class="mt-3">
@@ -399,28 +399,33 @@ function createJobCard(job){
             </div>`;
         viewLiker(jobCard,job);
         viewComment(jobCard,job);
-        setupLikeButton(job, jobCard);
+        updateLikeButton(job, jobCard);
         jobCard.querySelector('#userNamefromJob').addEventListener('click', ()=>{
             //console.log(userName);
             //console.log(userId);
         showProfile(job.creatorId);
         });
     //console.log(job.creatorId);
-    if (isCreator) {
-        jobCard.querySelector('.update-job').addEventListener('click', () => {
-            UpdateJob(job);
+        if (isCreator) {
+            jobCard.querySelector('.update-job').addEventListener('click', () => {
+                UpdateJob(job);
+            });
+            
+            jobCard.querySelector('.delete-job').addEventListener('click', () => {
+                DeleteJob(job.id);
+            });
+        }
+        jobCard.querySelector('.post-comment').addEventListener('click', () => {
+            updateComment(job.id);
         });
-        
-        jobCard.querySelector('.delete-job').addEventListener('click', () => {
-            DeleteJob(job.id);
-        });
-    }
     });
     return jobCard;
 }
 
 
 function showProfile(userId) {
+    const existingButtons = document.querySelectorAll('#watchButton, #updateProfileButton');
+    existingButtons.forEach(button => button.remove());
     apiCall(`user/?userId=${userId}`, 'GET', null, {
         'Content-type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
@@ -437,12 +442,21 @@ function showProfile(userId) {
         document.getElementById('profile-email').textContent = userData.email;
         document.getElementById('profile-followers-count').textContent = userData.usersWhoWatchMeUserIds.length;
         const followersList = document.getElementById('profile-followers-list');
-        followersList.innerHTML = '';
+        followersList.replaceChildren();
+        if (userData.usersWhoWatchMeUserIds.length === 0) {
+            followersList.innerHTML = '<li class="list-group-item">No followers yet</li>';
+            return;
+        }
+        
+        const processedFollowers = new Set();
         userData.usersWhoWatchMeUserIds.forEach(follower => {
+            if (!processedFollowers.has(follower)) {
+                processedFollowers.add(follower);
             apiCall(`user/?userId=${follower}`, 'GET', null, {
             'Content-type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
             }, function(userData) {
+                
                 const followerItem = document.createElement('li');
                 followerItem.className = 'list-group-item';
                 followerItem.innerHTML = `<a href="#" class="follower-link" data-user-id="${follower}">${userData.name}</a>`;
@@ -451,6 +465,7 @@ function showProfile(userId) {
                     });
                 followersList.appendChild(followerItem);
             });
+        }
         });  
         const profileJobsContainer = document.getElementById('profile-jobs');
         profileJobsContainer.innerHTML = '';
@@ -517,77 +532,54 @@ function showProfile(userId) {
     });
 }
 
-function viewLiker(jobCard,job){
-    jobCard.querySelector('.view-likers').addEventListener('click', () => {
-        const likeinside = document.getElementById('likeinside');
-        const likepeople = document.getElementById('likepeople');
-        likepeople.innerHTML='';
-        likeinside.style.display = 'flex';
-        document.getElementById('closelikePeople').addEventListener('click',() => {
-            likeinside.style.display = 'none';
-        }
-        );
-        if(job.likes.length===0){
-            likepeople.innerHTML = `<p class="text-center my-3">No likes yet</p>`;
-            return;
-        }
-        const listlikePeople = document.createElement('div');
-        listlikePeople.className = 'list-group list-group-flush';
-        job.likes.forEach(user => {
-            const userNameElement = document.createElement('a');
-            userNameElement.href='#';
-            userNameElement.className= 'list-group-item list-group-item-action';
-            userNameElement.innerHTML=
-            `<div class="d-flex justify-content-between align-items-center">
-            <span>${user.userName || `User ${user.userId}`}</span>
-            <small class="text-muted">ID: ${user.userId}</small>
-            </div>`;
-            userNameElement.addEventListener('click', ()=>{
-                likeinside.style.display = 'none';
-                 showProfile(user.userId);
-            });
-        listlikePeople.appendChild(userNameElement);
-        });
-        likepeople.appendChild(listlikePeople);
-    });
-}
 
-function viewComment(jobCard,job){
+function viewComment(jobCard,job) {
     jobCard.querySelector('.view-comments').addEventListener('click', () => {
         const commentinside = document.getElementById('commentinside');
         const commentcontent = document.getElementById('commentcontent');
-        commentcontent.innerHTML='';
-        commentinside.style.display = 'flex';
-        document.getElementById('closeComment').addEventListener('click',() => {
-            commentinside.style.display = 'none';
+        while (commentcontent.firstChild) {
+            commentcontent.removeChild(commentcontent.firstChild);
         }
-        );
-        if(job.comments.length===0){
-            commentcontent.innerHTML = `<p class="text-center my-3">No comments yet</p>`;
+        commentinside.style.display = 'flex';
+        document.getElementById('closeComment').addEventListener('click', () => {
+            commentinside.style.display = 'none';
+        });
+        if (job.comments.length === 0) {
+            const noCommentsText = document.createElement('p');
+            noCommentsText.className = 'text-center my-3';
+            noCommentsText.textContent = 'No comments yet';
+            commentcontent.appendChild(noCommentsText);
             return;
         }
         const listComments = document.createElement('div');
         listComments.className = 'list-group list-group-flush';
         job.comments.forEach(user => {
             const commentElement = document.createElement('div');
-            commentElement.className= 'list-group-item list-group-item-action';
-            commentElement.innerHTML=
-            `<div class="d-flex justify-content-between align-items-center">
-            <a href="#" class="userNameElement active">${user.userName || `User ${user.userId}`}</a>
-            <p class="mb-1">${user.comment}</p>
-            </div>`;
-            commentElement.querySelector('.userNameElement').addEventListener('click', ()=>{
+            commentElement.className = 'list-group-item list-group-item-action';
+            const containerDiv = document.createElement('div');
+            containerDiv.className = 'd-flex flex-column';
+            const userLink = document.createElement('a');
+            userLink.href = '#';
+            userLink.className = 'userNameElement active mb-1';
+            userLink.textContent = user.userName || `User ${user.userId}`;
+            const commentText = document.createElement('p');
+            commentText.className = 'mb-1';
+            commentText.textContent = user.comment;
+            userLink.addEventListener('click', (e) => {
+                e.preventDefault();
                 commentinside.style.display = 'none';
-                 showProfile(user.userId);
+                showProfile(user.userId);
             });
-        listComments.appendChild(commentElement);
+            containerDiv.appendChild(userLink);
+            containerDiv.appendChild(commentText);
+            commentElement.appendChild(containerDiv);
+            listComments.appendChild(commentElement);
         });
         commentcontent.appendChild(listComments);
     });
 }
 
-
-function setupLikeButton(job, jobCard) {
+function updateLikeButton(job,jobCard) {
     const currentUserId = localStorage.getItem('lurkforwork_userID');
     const likeButton = jobCard.querySelector('#like');
     const likeCountElement = jobCard.querySelector('.likelength');

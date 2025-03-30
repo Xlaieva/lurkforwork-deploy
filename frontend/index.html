@@ -93,7 +93,9 @@
                     <p>Email: <span id="profile-email"></span></p>
                     <p>Followers: <span id="profile-followers-count"></span></p>
                     <h3>Followers List</h3>
-                    <ul class="list-group" id="profile-followers-list"></ul>
+                    <ul class="list-group" id="profile-followers-list">
+                        <li class="list-group-item">Loading followers...</li>
+                    </ul>
                 </div>
             </div>
             <h2>Jobs Posted</h2>
@@ -260,6 +262,26 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" id="cancelWatch">Cancel</button>
                         <button type="button" class="btn btn-primary" id="submitWatch">Watch</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--commentPost Popup-->
+        <div class="modal hide" tabindex="-1" id="commentPostPopup">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Post Comment</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closeCommentPost"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <textarea class="form-control" id="comment-text" rows="3" placeholder="Write your comment here..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="cancelCommentPost">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="submitCommentPost">Post Comment</button>
                     </div>
                 </div>
             </div>
