@@ -531,7 +531,49 @@ function showProfile(userId) {
 
     });
 }
-
+function viewLiker(jobCard,job) {
+    jobCard.querySelector('.view-likers').addEventListener('click', () => {
+        const likeinside = document.getElementById('likeinside');
+        const likepeople = document.getElementById('likepeople');
+        while (likepeople.firstChild) {
+            likepeople.removeChild(likepeople.firstChild);
+        }
+        likeinside.style.display = 'flex';
+        document.getElementById('closelikePeople').addEventListener('click', () => {
+            likeinside.style.display = 'none';
+        }); 
+        if (job.likes.length === 0) {
+            const noLikesText = document.createElement('p');
+            noLikesText.className = 'text-center my-3';
+            noLikesText.textContent = 'No likes yet';
+            likepeople.appendChild(noLikesText);
+            return;
+        } 
+        const listlikePeople = document.createElement('div');
+        listlikePeople.className = 'list-group list-group-flush'; 
+        job.likes.forEach(user => {
+            const userNameElement = document.createElement('a');
+            userNameElement.href = '#';
+            userNameElement.className = 'list-group-item list-group-item-action';
+            const containerDiv = document.createElement('div');
+            containerDiv.className = 'd-flex justify-content-between align-items-center';
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = user.userName || `User ${user.userId}`;
+            const idSmall = document.createElement('small');
+            idSmall.className = 'text-muted';
+            idSmall.textContent = `ID: ${user.userId}`;
+            containerDiv.appendChild(nameSpan);
+            containerDiv.appendChild(idSmall);
+            userNameElement.appendChild(containerDiv);
+            userNameElement.addEventListener('click', () => {
+                likeinside.style.display = 'none';
+                showProfile(user.userId);
+            });  
+            listlikePeople.appendChild(userNameElement);
+        }); 
+        likepeople.appendChild(listlikePeople);
+    });
+}
 
 function viewComment(jobCard,job) {
     jobCard.querySelector('.view-comments').addEventListener('click', () => {
