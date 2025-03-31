@@ -1,7 +1,8 @@
 import { BACKEND_PORT } from './config.js';
 // A helper you may want to use when uploading new images to the server.
 import { fileToDataUrl } from './helpers.js';
-//Error popup
+
+/*----------------------Error popup------------------*/
 function showError(data){
     const errorMessage = document.getElementById('errorMessage');
     document.getElementById('errorPopup').style.display = 'flex';
@@ -13,7 +14,8 @@ function showError(data){
     }
     );
 }
-//call api for connect backend
+
+/*----------------------call api for connect backend------------------*/
 function apiCall(path,method,body,headers,successCallback){
     fetch(`http://localhost:5005/${path}`,{
     method:method,
@@ -29,7 +31,7 @@ function apiCall(path,method,body,headers,successCallback){
     });
 });
 }
-//register
+/*----------------------register------------------*/
 document.getElementById('btn-rsubmit').addEventListener('click',() => {
     const email = document.getElementById('r-email').value;
     const name = document.getElementById('r-name').value;
@@ -59,7 +61,8 @@ document.getElementById('btn-rsubmit').addEventListener('click',() => {
             });
     });
 });
-//login
+
+/*----------------------login------------------*/
 document.getElementById('btn-lsubmit').addEventListener('click',() => {
     const email = document.getElementById('l-email').value;
     const password = document.getElementById('l-password').value;
@@ -69,7 +72,6 @@ document.getElementById('btn-lsubmit').addEventListener('click',() => {
     }),{
         'Content-type': 'application/json',
     },function(data){
-        //console.log(data.userId);
         localStorage.setItem('lurkforwork_token',data.token);
         localStorage.setItem('lurkforwork_userID',data.userId);
         apiCall('user/watch','PUT',JSON.stringify({
@@ -84,23 +86,23 @@ document.getElementById('btn-lsubmit').addEventListener('click',() => {
         });
 });
 });
-//home page log out button
+
+/*----------------------home page log out button------------------*/
 document.getElementById('btn-logout').addEventListener('click',() => {
         localStorage.removeItem('lurkforwork_token');
         localStorage.removeItem('lurkforwork_userID');
         showPage('login');
 });
-//home page my profile button
+
+/*----------------------home page my profile button ------------------*/
 document.getElementById('btn-myprofile').addEventListener('click',() => {
     const existingUpdateButton = document.getElementById('updateProfileButton');
     if (existingUpdateButton) {
         existingUpdateButton.remove();
     }
     showProfile(localStorage.getItem('lurkforwork_userID'));
-    //console.log(localStorage.getItem('lurkforwork_userID'));
-    //updateProfile();
 });
-//add job
+/*----------------------add job popup------------------*/
 function AddJob(){
     const addJobModal = document.getElementById('add-job');
     document.getElementById('btn-addJob-upload').onclick = null;
@@ -131,7 +133,8 @@ function AddJob(){
         addJobModal.style.display = 'none';
     });
 }
-//for backend add job 
+
+/*----------------------for backend add job ------------------*/
 function addJob(data) {
     apiCall('job', 'POST', JSON.stringify(data), {
         'Content-type': 'application/json',
@@ -146,7 +149,7 @@ function addJob(data) {
     });
 }
 
-//update job
+/*----------------------update job popup------------------*/
 function UpdateJob(job) {
     document.getElementById('updateJob-title').value = job.title;
     document.getElementById('updateJob-date').value = job.start.split('/').reverse().join('-');
@@ -173,7 +176,7 @@ function UpdateJob(job) {
     };
 }
 
-//for backend update job 
+/*----------------------for backend update job------------------*/
 function updateJob(jobData) {
     apiCall('job', 'PUT', JSON.stringify(jobData), {
         'Content-type': 'application/json',
@@ -193,7 +196,7 @@ document.getElementById('cancelUpdateJob').addEventListener('click', () => {
 });
 
 
-//delete job
+/*----------------------delete job------------------*/
 function DeleteJob(jobId) {
     document.getElementById('deleteJobPopup').style.display = 'flex';
     document.getElementById('deleteJobPopup').style.justifyContent = 'center';
@@ -219,7 +222,8 @@ document.getElementById('cancelDeleteJob').addEventListener('click', () => {
 
 
 
-//update profile
+
+/*----------------------update profile popup------------------*/
 function UpdateProfile(){
     const updateprofile=document.getElementById('update-profile');
     document.getElementById('btn-upload').onclick = null; 
@@ -249,7 +253,8 @@ function UpdateProfile(){
         }
     });
 }
-//for backend update profile
+
+/*----------------------for backend update profile------------------*/
 function updateProfile(data) {
     if (Object.keys(data).length === 1) {
         showError('No changes to update');
@@ -268,14 +273,8 @@ function updateProfile(data) {
     }); 
 }
 
-const showPage = (pageName) => {
-    const pages = document.querySelectorAll('.page');
-        for(const page of pages) {
-            page.classList.add('hide');
-        }
-        document.getElementById(`page-${pageName}`).classList.remove('hide');
-}
 
+/*----------------------create home page------------------*/
 let isLoading = false;
 let currentStart = 0;
 const loadFeed = (reset = false) => {
@@ -324,6 +323,8 @@ const loadFeed = (reset = false) => {
     }); 
 };
 
+
+/*----------------------search other users to follow/watch popup------------------*/
 function watchPopup(){
     const watchUserBtn = document.getElementById('btn-watchUser');
     watchUserBtn.addEventListener('click', () => {
@@ -360,6 +361,7 @@ function watchPopup(){
 }
 
 
+/*----------------------create job cards------------------*/
 function createJobCard(job) {
     const currentUserId = localStorage.getItem('lurkforwork_userID');
     const jobCard = document.createElement('div');
@@ -482,6 +484,7 @@ function createJobCard(job) {
     return jobCard;
 }
 
+/*----------------------update comment popup------------------*/
 function updateComment(jobId) {
     document.getElementById('comment-text').value = '';
     document.getElementById('commentPostPopup').style.display = 'flex';
@@ -511,6 +514,7 @@ function updateComment(jobId) {
     });
 }
 
+/*----------------------show user's profile------------------*/
 function showProfile(userId) {
     const existingButtons = document.querySelectorAll('#watchButton, #updateProfileButton');
     existingButtons.forEach(button => button.remove());
@@ -518,8 +522,6 @@ function showProfile(userId) {
         'Content-type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
     }, function(userData) {
-        //console.log(userData.usersWhoWatchMeUserIds);
-        //console.log(userData.image);
         if(userData.image){
             const profileImage = document.getElementById('profile-image');
             profileImage.src=userData.image;}
@@ -578,9 +580,7 @@ function showProfile(userId) {
             const jobCard = createJobCard(job);
             profileJobsContainer.appendChild(jobCard);
         });
-        //console.log('showP');
         showPage('profile');
-        //console.log('showPl');
         document.getElementById('btn-tomyprofile').addEventListener('click',() => {
             console.log(localStorage.getItem('lurkforwork_userID'));
             showProfile(localStorage.getItem('lurkforwork_userID'));
@@ -597,7 +597,6 @@ function showProfile(userId) {
             updateProfileButton.innerText="Update Profile";
             document.getElementById('page-profile').appendChild(updateProfileButton);
             updateProfileButton.addEventListener('click',() => {
-                //console.log(localStorage.getItem('lurkforwork_userID'));
                 updateprofile.style.display='flex';
             });
             document.getElementById('closeupdateProfile').addEventListener('click',() => {
@@ -631,6 +630,7 @@ function showProfile(userId) {
 
     });
 }
+/*----------------------view jobs'likers popup------------------*/
 function viewLiker(jobCard,job) {
     jobCard.querySelector('.view-likers').addEventListener('click', () => {
         const likeinside = document.getElementById('likeinside');
@@ -674,7 +674,7 @@ function viewLiker(jobCard,job) {
         likepeople.appendChild(listlikePeople);
     });
 }
-
+/*----------------------view jobs'comment popup------------------*/
 function viewComment(jobCard,job) {
     jobCard.querySelector('.view-comments').addEventListener('click', () => {
         const commentinside = document.getElementById('commentinside');
@@ -720,7 +720,7 @@ function viewComment(jobCard,job) {
         commentcontent.appendChild(listComments);
     });
 }
-
+/*----------------------update like status------------------*/
 function updateLikeButton(job,jobCard) {
     const currentUserId = localStorage.getItem('lurkforwork_userID');
     const likeButton = jobCard.querySelector('#like');
@@ -750,8 +750,6 @@ function updateLikeButton(job,jobCard) {
             'Content-type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
         }, function(data) {
-            console.log(data);
-            //job.likes[currentUserId]=true;
             const cleanedLikes = data.likes.filter(like => 
                 like && typeof like === 'object' && like.userId
             );
@@ -770,9 +768,7 @@ function updateLikeButton(job,jobCard) {
 }
 
 
-
-
-
+/*----------------------deal with job's time------------------*/
 function formatTimestamp(timestamp) {
     const now = new Date();
     const postDate = new Date(timestamp);
@@ -797,7 +793,7 @@ function formatStartDate(timestamp) {
     return `${day}/${month}/${year}`;
 }
 
-
+/*----------------------for button to different page------------------*/
 const buttons = document.querySelectorAll('.toPage');
 buttons.forEach(button => {
   button.addEventListener('click', () => {
@@ -806,15 +802,22 @@ buttons.forEach(button => {
   })
 });
 
-
+/*----------------------infinite scroll------------------*/
 window.addEventListener('scroll', () => {
     if (isLoading || document.getElementById('loading').style.display === 'flex') return;
     if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
         loadFeed();
     }
 });
-
-
+/*----------------------show different page------------------*/
+const showPage = (pageName) => {
+    const pages = document.querySelectorAll('.page');
+        for(const page of pages) {
+            page.classList.add('hide');
+        }
+        document.getElementById(`page-${pageName}`).classList.remove('hide');
+}
+/*-------------------when login or register:home, else:login------------------*/
 let token = localStorage.getItem('lurkforwork_token');
 if(token){
     showPage('home');
@@ -823,7 +826,7 @@ if(token){
 }else{
     showPage('login');
 }
-
+/*----------------------url routing------------------*/
 function handleHashChange() {
     const hash = window.location.hash.substring(1);
     
