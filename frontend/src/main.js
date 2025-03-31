@@ -1,6 +1,7 @@
 import { BACKEND_PORT } from './config.js';
 // A helper you may want to use when uploading new images to the server.
 import { fileToDataUrl } from './helpers.js';
+//Error popup
 function showError(data){
     const errorMessage = document.getElementById('errorMessage');
     document.getElementById('errorPopup').style.display = 'flex';
@@ -12,6 +13,7 @@ function showError(data){
     }
     );
 }
+//call api for connect backend
 function apiCall(path,method,body,headers,successCallback){
     fetch(`http://localhost:5005/${path}`,{
     method:method,
@@ -27,6 +29,7 @@ function apiCall(path,method,body,headers,successCallback){
     });
 });
 }
+//register
 document.getElementById('btn-rsubmit').addEventListener('click',() => {
     const email = document.getElementById('r-email').value;
     const name = document.getElementById('r-name').value;
@@ -56,6 +59,7 @@ document.getElementById('btn-rsubmit').addEventListener('click',() => {
             });
     });
 });
+//login
 document.getElementById('btn-lsubmit').addEventListener('click',() => {
     const email = document.getElementById('l-email').value;
     const password = document.getElementById('l-password').value;
@@ -80,12 +84,13 @@ document.getElementById('btn-lsubmit').addEventListener('click',() => {
         });
 });
 });
+//home page log out button
 document.getElementById('btn-logout').addEventListener('click',() => {
         localStorage.removeItem('lurkforwork_token');
         localStorage.removeItem('lurkforwork_userID');
         showPage('login');
 });
-
+//home page my profile button
 document.getElementById('btn-myprofile').addEventListener('click',() => {
     const existingUpdateButton = document.getElementById('updateProfileButton');
     if (existingUpdateButton) {
@@ -95,8 +100,8 @@ document.getElementById('btn-myprofile').addEventListener('click',() => {
     //console.log(localStorage.getItem('lurkforwork_userID'));
     //updateProfile();
 });
-
-function addJob(){
+//add job
+function AddJob(){
     const addJobModal = document.getElementById('add-job');
     document.getElementById('btn-addJob-upload').onclick = null;
     document.getElementById('btn-addJob-upload').addEventListener('click', () => {
@@ -116,17 +121,32 @@ function addJob(){
         if (image.files && image.files.length > 0) {
             fileToDataUrl(image.files[0]).then(imageData => {
                 jobData.image = imageData.startsWith('data:') ? imageData : `data:${image.files[0].type};base64,${imageData}`;
-                sendJobRequest(jobData);
+                addJob(jobData);
             });
         } else {
-            sendJobRequest(jobData);
+            addJob(jobData);
         }
     });
     document.getElementById('closeAddJob').addEventListener('click', () => {
         addJobModal.style.display = 'none';
     });
 }
+//for backend add job 
+function addJob(data) {
+    apiCall('job', 'POST', JSON.stringify(data), {
+        'Content-type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
+    }, function(response) {
+        document.getElementById('add-job').style.display = 'none';
+        document.getElementById('addJob-title').value = '';
+        document.getElementById('addJob-date').value = '';
+        document.getElementById('addJob-description').value = '';
+        document.getElementById('addJob-image').value = '';
+        loadFeed(true);
+    });
+}
 
+//update job
 function UpdateJob(job) {
     document.getElementById('updateJob-title').value = job.title;
     document.getElementById('updateJob-date').value = job.start.split('/').reverse().join('-');
@@ -153,6 +173,7 @@ function UpdateJob(job) {
     };
 }
 
+//for backend update job 
 function updateJob(jobData) {
     apiCall('job', 'PUT', JSON.stringify(jobData), {
         'Content-type': 'application/json',
@@ -163,6 +184,16 @@ function updateJob(jobData) {
     });
 }
 
+document.getElementById('closeUpdateJob').addEventListener('click', () => {
+    document.getElementById('updateJobPopup').style.display = 'none';
+});
+
+document.getElementById('cancelUpdateJob').addEventListener('click', () => {
+    document.getElementById('updateJobPopup').style.display = 'none';
+});
+
+
+//delete job
 function DeleteJob(jobId) {
     document.getElementById('deleteJobPopup').style.display = 'flex';
     document.getElementById('deleteJobPopup').style.justifyContent = 'center';
@@ -178,15 +209,6 @@ function DeleteJob(jobId) {
     };
 }
 
-
-document.getElementById('closeUpdateJob').addEventListener('click', () => {
-    document.getElementById('updateJobPopup').style.display = 'none';
-});
-
-document.getElementById('cancelUpdateJob').addEventListener('click', () => {
-    document.getElementById('updateJobPopup').style.display = 'none';
-});
-
 document.getElementById('closeDeleteJob').addEventListener('click', () => {
     document.getElementById('deleteJobPopup').style.display = 'none';
 });
@@ -196,21 +218,9 @@ document.getElementById('cancelDeleteJob').addEventListener('click', () => {
 });
 
 
-function sendJobRequest(data) {
-    apiCall('job', 'POST', JSON.stringify(data), {
-        'Content-type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
-    }, function(response) {
-        document.getElementById('add-job').style.display = 'none';
-        document.getElementById('addJob-title').value = '';
-        document.getElementById('addJob-date').value = '';
-        document.getElementById('addJob-description').value = '';
-        document.getElementById('addJob-image').value = '';
-        loadFeed(true);
-    });
-}
 
-function updateProfile(){
+//update profile
+function UpdateProfile(){
     const updateprofile=document.getElementById('update-profile');
     document.getElementById('btn-upload').onclick = null; 
     document.getElementById('btn-upload').addEventListener('click',() => {
@@ -230,26 +240,31 @@ function updateProfile(){
                 } else {
                     updateData.image = `data:${image.files[0].type};base64,${imageData}`;
                 }
-                //console.log(updateData);
-                sendUpdateRequest(updateData);
+                updateProfile(updateData);
             });
         } else {
-            sendUpdateRequest(updateData);
+            updateProfile(updateData);
             //console.log(updateData);
             updateprofile.style.display = 'none';
         }
     });
 }
-function sendUpdateRequest(data) {
-    if (Object.keys(data).length === 0) {
-        //console.log('44');
+//for backend update profile
+function updateProfile(data) {
+    if (Object.keys(data).length === 1) {
         showError('No changes to update');
         return;
     }
     apiCall('user', 'PUT', JSON.stringify(data), {
         'Content-type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
-        }, function(response) {      
+        }, function(response) {   
+            response.json().then((data)=> {
+                if (response.status === 200){
+            }else{
+                showError(data.error);
+            }
+        });
     }); 
 }
 
@@ -588,7 +603,7 @@ function showProfile(userId) {
             document.getElementById('closeupdateProfile').addEventListener('click',() => {
                 updateprofile.style.display = 'none';
             });
-            updateProfile();
+            UpdateProfile();
         }
         else{
             if(existingUpdateButton){
@@ -804,7 +819,7 @@ let token = localStorage.getItem('lurkforwork_token');
 if(token){
     showPage('home');
     loadFeed();
-    addJob();
+    AddJob();
 }else{
     showPage('login');
 }
