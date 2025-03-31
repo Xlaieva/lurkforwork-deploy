@@ -15,7 +15,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                   <div class="modal-header">
-                    <h5 class="modal-title">Error Message</h5>
+                    <h5 class="modal-title">Message</h5>
                     <button type="button" id="closePopup" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                   </div>
                   <div class="modal-body" id="errorMessage">
@@ -84,8 +84,10 @@
         <!--profile-->
         <div id="page-profile" class="page hide">
             <h1>User Profile</h1>
+            <div class="d-flex gap-2 mb-3"> 
             <button class="btn btn-secondary toPage" data-page="home">home</button>
-            <button id="btn-tomyprofile" type="button" class="btn btn-primary">My Profile</button>
+            <button id="btn-tomyprofile" type="button" class="btn btn-primary hide">My Profile</button>
+            </div>
             <div class="card my-3" id="profile-card">
                 <img id="profile-image" class="card-img-top" alt="Profile image">
                 <div class="card-body">

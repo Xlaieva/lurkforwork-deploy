@@ -288,9 +288,8 @@ const loadFeed = (reset = false) => {
     },function(data){
         isLoading = false;
         document.getElementById('loading').style.display = 'none';
-        //console.log(data);
+        const addJobBtn = document.getElementById('btn-addJob');
         const feedContainer = document.getElementById('feed-content');
-        //console.log(feedContainer.children.length);
         if (reset) {
             while (feedContainer.firstChild) {
                 feedContainer.removeChild(feedContainer.firstChild);
@@ -298,6 +297,13 @@ const loadFeed = (reset = false) => {
         }
         if (!data || data.length === 0) {
             document.getElementById('nomoreJobs').style.display = 'block';
+            watchPopup();
+            addJobBtn.addEventListener('click', () => {
+                console.log("ss");
+                document.getElementById('add-job').style.display = 'flex';
+                document.getElementById('add-job').style.justifyContent = 'center';
+                document.getElementById('add-job').style.alignItems = 'center';
+            });
             return;
         }else{
             document.getElementById('nomoreJobs').style.display = 'none';
@@ -313,7 +319,7 @@ const loadFeed = (reset = false) => {
         currentStart += data.length;
         watchPopup();
 
-        const addJobBtn = document.getElementById('btn-addJob');
+       
         
         addJobBtn.addEventListener('click', () => {
             document.getElementById('add-job').style.display = 'flex';
@@ -328,6 +334,7 @@ const loadFeed = (reset = false) => {
 function watchPopup(){
     const watchUserBtn = document.getElementById('btn-watchUser');
     watchUserBtn.addEventListener('click', () => {
+        console.log("watch");
         document.getElementById('watchPopup').style.display = 'flex';
         document.getElementById('watchPopup').style.justifyContent = 'center';
         document.getElementById('watchPopup').style.alignItems = 'center';
@@ -515,6 +522,7 @@ function updateComment(jobId) {
 }
 
 /*----------------------show user's profile------------------*/
+
 function showProfile(userId) {
     const existingButtons = document.querySelectorAll('#watchButton, #updateProfileButton');
     existingButtons.forEach(button => button.remove());
@@ -547,25 +555,25 @@ function showProfile(userId) {
         userData.usersWhoWatchMeUserIds.forEach(follower => {
             if (!processedFollowers.has(follower)) {
                 processedFollowers.add(follower);
-            apiCall(`user/?userId=${follower}`, 'GET', null, {
-            'Content-type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
-            }, function(userData) {
+                apiCall(`user/?userId=${follower}`, 'GET', null, {
+                'Content-type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
+                }, function(userData) {
                 
-                const followerItem = document.createElement('li');
-                followerItem.className = 'list-group-item';
-                const followerLink = document.createElement('a');
-                followerLink.href = '#';
-                followerLink.className = 'follower-link';
-                followerLink.dataset.userId = follower;
-                followerLink.textContent = userData.name;
-                followerItem.appendChild(followerLink);
-                followerLink.addEventListener('click', () => {
-                    showProfile(follower);
-                    });
-                followersList.appendChild(followerItem);
-            });
-        }
+                    const followerItem = document.createElement('li');
+                    followerItem.className = 'list-group-item';
+                    const followerLink = document.createElement('a');
+                    followerLink.href = '#';
+                    followerLink.className = 'follower-link';
+                    followerLink.dataset.userId = follower;
+                    followerLink.textContent = userData.name;
+                    followerItem.appendChild(followerLink);
+                    followerLink.addEventListener('click', () => {
+                        showProfile(follower);
+                        });
+                    followersList.appendChild(followerItem);
+                });
+            }
         });  
         const profileJobsContainer = document.getElementById('profile-jobs');
         while (profileJobsContainer.firstChild) {
@@ -581,17 +589,15 @@ function showProfile(userId) {
             profileJobsContainer.appendChild(jobCard);
         });
         showPage('profile');
-        document.getElementById('btn-tomyprofile').addEventListener('click',() => {
-            console.log(localStorage.getItem('lurkforwork_userID'));
-            showProfile(localStorage.getItem('lurkforwork_userID'));
-        });
+        
         const existingUpdateButton = document.getElementById('updateProfileButton');
         if (existingUpdateButton) {
             existingUpdateButton.remove();
         }
         const updateProfileButton = document.createElement('button');
         const updateprofile=document.getElementById('update-profile');
-        if (userId === localStorage.getItem('lurkforwork_userID')) {
+        if (String(userId) === String(localStorage.getItem('lurkforwork_userID'))) {
+            document.getElementById('btn-tomyprofile').style.display='none';
             updateProfileButton.id="updateProfileButton";
             updateProfileButton.className ="button btn-primary";
             updateProfileButton.innerText="Update Profile";
@@ -605,15 +611,18 @@ function showProfile(userId) {
             UpdateProfile();
         }
         else{
+            document.getElementById('btn-tomyprofile').style.display='block';
+            document.getElementById('btn-tomyprofile').addEventListener('click',() => {
+                showProfile(localStorage.getItem('lurkforwork_userID'));
+            });
             if(existingUpdateButton){
                 document.getElementById('page-profile').removeChild(existingUpdateButton);
             }
             const watchButton = document.createElement('button');
             watchButton.id = "watchButton";
             watchButton.className = "button btn-primary";
-            const isWatching = userData.usersWhoWatchMeUserIds.includes(localStorage.getItem('lurkforwork_userID'));
+            const isWatching = String(userData.usersWhoWatchMeUserIds).includes(String(localStorage.getItem('lurkforwork_userID')));
             watchButton.innerText = isWatching ? "Unwatch" : "Watch";
-            
             watchButton.addEventListener('click', () => {
                 apiCall('user/watch', 'PUT', JSON.stringify({
                     id: userId,
