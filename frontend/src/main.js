@@ -324,6 +324,54 @@ const loadFeed = (reset = false) => {
 };
 
 
+/*----------------------show favourite jobs------------------*/
+document.getElementById('closefavJob').addEventListener('click', () => {
+    document.getElementById('favJobPopup').style.display = 'none';
+});
+function loadFavorites() {
+    const userId = localStorage.getItem('lurkforwork_userID');
+    apiCall('job/feed?start=0', 'GET', null, {
+        'Content-type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
+    }, function(allJobs) {
+        const favoritesList = document.getElementById('favoritesList');
+        favoritesList.textContent = ''; 
+        const likedJobs = allJobs.filter(job => 
+            job.likes.some(like => String(like.userId) === userId)
+        );
+        if (likedJobs.length === 0) {
+            const noFavorites = document.createElement('div');
+            noFavorites.className = 'list-group-item';
+            noFavorites.textContent = 'You have not liked any jobs yet';
+            favoritesList.appendChild(noFavorites);
+        } else {
+            likedJobs.forEach(job => {
+                apiCall(`user/?userId=${job.creatorId}`, 'GET', null, {
+                    'Content-type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
+                }, function(creatorData) {
+                    const favoriteItem = document.createElement('div');
+                    favoriteItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    const jobTitle = document.createElement('span');
+                    jobTitle.textContent = job.title;
+                    const creatorLink = document.createElement('a');
+                    creatorLink.href = '#';
+                    creatorLink.textContent = `${creatorData.name}`;
+                    creatorLink.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        document.getElementById('favJobPopup').style.display = 'none';
+                        showProfile(job.creatorId);
+                    });
+                    favoriteItem.appendChild(jobTitle);
+                    favoriteItem.appendChild(creatorLink);
+                    favoritesList.appendChild(favoriteItem);
+                });
+            });
+        }
+        document.getElementById('favJobPopup').style.display = 'flex';
+    });
+}
+
 /*----------------------search other users to follow/watch popup------------------*/
 function watchPopup(){
     const watchUserBtn = document.getElementById('btn-watchUser');
@@ -591,6 +639,8 @@ function showProfile(userId) {
         const updateProfileButton = document.createElement('button');
         const updateprofile=document.getElementById('update-profile');
         if (String(userId) === String(localStorage.getItem('lurkforwork_userID'))) {
+            document.getElementById('btn-favorites').style.display='block';
+            document.getElementById('btn-favorites').addEventListener('click', loadFavorites);
             document.getElementById('btn-tomyprofile').style.display='none';
             updateProfileButton.id="updateProfileButton";
             updateProfileButton.className ="button btn-primary";
@@ -605,6 +655,7 @@ function showProfile(userId) {
             UpdateProfile();
         }
         else{
+            document.getElementById('btn-favorites').style.display='none';
             document.getElementById('btn-tomyprofile').style.display='block';
             document.getElementById('btn-tomyprofile').addEventListener('click',() => {
                 showProfile(localStorage.getItem('lurkforwork_userID'));

@@ -85,6 +85,7 @@
             <div class="d-flex gap-2 mb-3"> 
             <button class="btn btn-secondary toPage" data-page="home">home</button>
             <button id="btn-tomyprofile" type="button" class="btn btn-primary hide">My Profile</button>
+            <button id="btn-favorites" type="button" class="btn btn-secondary hide">My Favorites</button>
             </div>
             <div class="card my-3" id="profile-card">
                 <img id="profile-image" class="card-img-top" alt="Profile image">
@@ -282,6 +283,20 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" id="cancelCommentPost">Cancel</button>
                         <button type="button" class="btn btn-primary" id="submitCommentPost">Post Comment</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--favouriteJob Popup-->
+        <div class="modal hide" tabindex="-1" id="favJobPopup">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Favorite Jobs</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closefavJob"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="favoritesList" class="list-group"></div>
                     </div>
                 </div>
             </div>
