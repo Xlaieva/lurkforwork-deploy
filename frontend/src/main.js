@@ -282,7 +282,7 @@ const loadFeed = (reset = false) => {
     isLoading = true;
     document.getElementById('loading').textContent = 'Loading more jobs...';
     document.getElementById('loading').style.display = 'block';
-    apiCall(`job/feed?start=${currentStart}`,'GET', null,{
+    apiCall(`job/feed?start=${currentStart}&limit=2`,'GET', null,{
         'Content-type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('lurkforwork_token')}`
     },function(data){
@@ -309,18 +309,12 @@ const loadFeed = (reset = false) => {
             document.getElementById('nomoreJobs').style.display = 'none';
         }
         data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        let row = document.createElement('div');
-        row.className = 'row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4';
-        feedContainer.appendChild(row);
         data.forEach(job => {
             const jobCard = createJobCard(job);
             feedContainer.appendChild(jobCard);
         });
         currentStart += data.length;
         watchPopup();
-
-       
-        
         addJobBtn.addEventListener('click', () => {
             document.getElementById('add-job').style.display = 'flex';
             document.getElementById('add-job').style.justifyContent = 'center';
@@ -372,7 +366,7 @@ function watchPopup(){
 function createJobCard(job) {
     const currentUserId = localStorage.getItem('lurkforwork_userID');
     const jobCard = document.createElement('div');
-    jobCard.className = 'card h-100 d-flex flex-column';
+    jobCard.className = 'card h-100';
     const isCreator = String(job.creatorId) === String(currentUserId);
     apiCall(`user/?userId=${job.creatorId}`, 'GET', null, {
         'Content-type': 'application/json',
